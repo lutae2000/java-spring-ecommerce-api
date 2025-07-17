@@ -2,6 +2,7 @@ package com.loopers.infrastructure.point;
 
 import com.loopers.domain.point.PointEntity;
 import com.loopers.domain.point.PointRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

@@ -42,7 +42,6 @@ public class PointV1ApiE2ETest {
     }
 
 
-
     @AfterEach
     void tearDown() {
         databaseCleanUp.truncateAllTables();

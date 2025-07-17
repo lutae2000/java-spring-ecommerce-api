@@ -32,7 +32,7 @@ public class PointEntity {
     }
 
     private void validPoint(Long point){
-        if(point < 0){
+        if(point < 0 || point == null){
             throw new CoreException(ErrorType.BAD_REQUEST, "포인트는 마이너스 값이 될 수 없습니다");
         }
     }
