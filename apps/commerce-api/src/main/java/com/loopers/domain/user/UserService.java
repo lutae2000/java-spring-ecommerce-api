@@ -1,7 +1,5 @@
 package com.loopers.domain.user;
 
-import com.loopers.interfaces.api.user.UserDto;
-
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import java.util.Optional;
@@ -21,13 +19,13 @@ public class UserService {
      * @param loginId
      * @return UserDto
      */
-    public UserDto getUserInfo(String loginId) {
+    public UserInfo getUserInfo(String loginId) {
         log.debug("::: inquiry loginId ::: loginId: {}", loginId);
 
         Optional<User> user = userRepository.selectUserByLoginId(loginId);
 
         if(user.isPresent()){
-            return user.get().toUserDto();
+            return UserInfo.from(user.get());
         }
 
         throw new CoreException(ErrorType.NOT_FOUND, "존재하는 회원이 없습니다");
@@ -38,9 +36,9 @@ public class UserService {
      * @param user
      * @return UserDto
      */
-    public UserDto createUserId(UserDto userDto) {
+    public UserInfo createUserId(UserCommand.Create userCommand) {
 
-        User user = userDto.toUserEntity();
+        User user = userCommand.toUserEntity();
 
         log.debug("::: Creating user with login Object ::: user: {}", user);
 
@@ -51,6 +49,7 @@ public class UserService {
         }
 
         User res = userRepository.save(user);
-        return res.toUserDto();
+
+        return UserInfo.from(user);
     }
 }
