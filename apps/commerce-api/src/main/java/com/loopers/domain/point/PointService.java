@@ -5,6 +5,7 @@ import com.loopers.domain.user.UserRepository;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,8 +36,12 @@ public class PointService {
             throw new CoreException(ErrorType.NOT_FOUND, "존재하지 않는 회원입니다");
         }
 
-        Long totalPoint;
-        PointEntity pointEntity = pointRepository.findByLoginId(user.get().getLoginId());
+        if(command.point() <= 0){
+            throw new CoreException(ErrorType.BAD_REQUEST, "충전하려는 포인트가 0이하가 될 수 없습니다");
+        }
+
+        Long totalPoint = 0L;
+        PointEntity pointEntity = pointRepository.findByLoginId(user.get().getLoginId()).orElse(null);
         if(ObjectUtils.isEmpty(pointEntity)) {  //값이 없으면 최초 적립
             totalPoint = command.point();
         } else {
@@ -46,9 +51,14 @@ public class PointService {
         pointRepository.save(user.get().getLoginId(), totalPoint);
 
 
-        PointEntity result = pointRepository.findByLoginId(user.get().getLoginId());
+        PointEntity result = pointRepository.findByLoginId(user.get().getLoginId()).orElse(null);
 
-        return PointInfo.from(result);
+        PointInfo pointInfo = PointInfo.builder()
+            .loginId(user.get().getLoginId())
+            .point(ObjectUtils.isEmpty(result.getPoint()) ? 0L : result.getPoint())
+            .build();
+
+        return pointInfo;
     }
 
 
@@ -60,12 +70,15 @@ public class PointService {
             throw new CoreException(ErrorType.NOT_FOUND, "존재하지 않는 회원입니다");
         }
 
-        PointEntity pointEntity = pointRepository.findByLoginId(user.get().getLoginId());
+        PointEntity pointEntity = pointRepository.findByLoginId(user.get().getLoginId()).orElse(null);
 
-        if(ObjectUtils.isEmpty(pointEntity)) {
-            return new PointInfo(0L, loginId); //NPE 발생해서 초기값 생성
-        } else {
-            return new PointInfo(pointEntity.getPoint(), loginId);
-        }
+
+        PointInfo pointInfo = PointInfo.builder()
+            .loginId(user.get().getLoginId())
+            .point(ObjectUtils.isEmpty(pointEntity) ? 0L : pointEntity.getPoint())
+            .build();
+
+        return pointInfo;
     }
+
 }

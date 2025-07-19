@@ -6,17 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.loopers.domain.domainEnum.Gender;
-import com.loopers.domain.user.UserInfo;
-import com.loopers.interfaces.api.user.UserController;
 import com.loopers.interfaces.api.user.UserDto;
-import com.loopers.support.error.CoreException;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
@@ -25,7 +21,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.util.UriComponentsBuilder;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class UserV1ApiE2ETest {
@@ -132,7 +127,7 @@ public class UserV1ApiE2ETest {
         String requestURL =  ENDPOINT_SIGNUP;
 
 
-        @DisplayName("실패 - 이미 존재하는 회원")
+        @DisplayName("정상 - 존재하는 회원 조회")
         @Test
         void inquiryUser(){
 
@@ -175,7 +170,7 @@ public class UserV1ApiE2ETest {
         }
 
 
-        @DisplayName("실패 - 미존재 회원")
+        @DisplayName("실패 - 미존재 회원이라면 404 상태응답 & null 응답")
         @Test
         void inquiryNotExistsUser(){
             HttpHeaders httpHeaders = new HttpHeaders();

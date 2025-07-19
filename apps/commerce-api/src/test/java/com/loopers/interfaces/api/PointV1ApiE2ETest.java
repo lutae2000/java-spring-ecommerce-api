@@ -10,6 +10,7 @@ import com.loopers.domain.point.PointCommand.Create;
 import com.loopers.interfaces.api.point.PointDto;
 import com.loopers.interfaces.api.user.UserDto;
 import com.loopers.interfaces.api.user.UserDto.Response;
+import com.loopers.support.header.CustomHeader;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -17,6 +18,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -98,7 +101,49 @@ public class PointV1ApiE2ETest {
             );
         }
 
-        @DisplayName("실패 - 회원정보 없음")
+        @DisplayName("성공 - 포인트를 여러건 충전시 누적된 값이 응답으로 와야함")
+        @Test
+        void accumulatePointSuccess_lotsOfTimesPointChargeValue(){
+            Long[] chargeAmounts = {10000L, 20000L};
+            Long[] expectedResults = {10000L, 30000L};
+            /**
+             * given
+             * given 회원 생성
+             */
+            UserDto.SignUpRequest request1 = UserDto.SignUpRequest.builder()
+                .birthday(birthday)
+                .email(email)
+                .gender(Gender.M)
+                .loginId(loginId)
+                .build();
+
+            ResponseEntity<ApiResponse<UserDto.Response>> response = testRestTemplate.exchange(
+                ENDPOINT_SIGNUP,
+                HttpMethod.POST,
+                new HttpEntity<>(request1),
+                new ParameterizedTypeReference<>() {});
+
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.add("X-USER-ID", loginId);
+
+            for(int i = 0; i < chargeAmounts.length; i++){
+                PointCommand.Create command = new Create(loginId, chargeAmounts[i]);
+
+                ResponseEntity<ApiResponse<PointDto.Response>> res = testRestTemplate.exchange(
+                    ENDPOINT + "/charge",
+                    HttpMethod.POST,
+                    new HttpEntity<>(command, httpHeaders),
+                    new ParameterizedTypeReference<>() {});
+
+                int finalI = i;
+                assertAll(
+                    () -> assertTrue(res.getStatusCode().is2xxSuccessful()),
+                    () -> assertThat(res.getBody().data().getPoint()).isEqualTo(expectedResults[finalI])
+                );
+            }
+        }
+
+        @DisplayName("실패 - 회원정보 없을때 404에러 발생")
         @Test
         void accumulatePointFailed_notExistsUser(){
             PointCommand.Create command = new Create(loginId, 1000L);
@@ -119,7 +164,7 @@ public class PointV1ApiE2ETest {
             );
         }
 
-        @DisplayName("실패 - 포인트 마이너스 적립시도")
+        @DisplayName("실패 - 포인트 마이너스 적립시도하여 400에러 발생")
         @Test
         void accumulatePointFailed_minusPointChargeValue(){
             /**
@@ -158,7 +203,6 @@ public class PointV1ApiE2ETest {
 
     }
 
-    //헤더누락
     @Nested
     @DisplayName("GET /api/v1/points")
     class getPoint {
@@ -171,10 +215,8 @@ public class PointV1ApiE2ETest {
         @DisplayName("성공 - 정상 케이스")
         @Test
         void getPointSuccess(){
-            /**
-             * given
-             * given 회원 생성
-             */
+
+            //회원 생성
             UserDto.SignUpRequest request1 = UserDto.SignUpRequest.builder()
                 .birthday(birthday)
                 .email(email)
@@ -191,7 +233,7 @@ public class PointV1ApiE2ETest {
             PointCommand.Create command = new Create(loginId, 1000L);
 
             HttpHeaders httpHeaders = new HttpHeaders();
-            httpHeaders.add("X-USER-ID", loginId);
+            httpHeaders.add(CustomHeader.USER_ID, loginId);
 
             ResponseEntity<ApiResponse<Response>> res = testRestTemplate.exchange(
                 ENDPOINT,
@@ -199,19 +241,17 @@ public class PointV1ApiE2ETest {
                 new HttpEntity<>(command, httpHeaders),
                 new ParameterizedTypeReference<>() {});
 
+
             assertAll(
                 () -> assertTrue(res.getStatusCode().is4xxClientError())
             );
         }
 
 
-        @DisplayName("실패 - 헤더누락")
+        @DisplayName("실패 - 헤더누락으로 400에러 발생")
         @Test
         void getPointFailed_headerMissing(){
-            /**
-             * given
-             * given 회원 생성
-             */
+
             UserDto.SignUpRequest request1 = UserDto.SignUpRequest.builder()
                 .birthday(birthday)
                 .email(email)
@@ -240,7 +280,7 @@ public class PointV1ApiE2ETest {
             );
         }
 
-        @DisplayName("없는 회원")
+        @DisplayName("실패 - 없는 회원으로 충전요청시 404에러 발생")
         @Test
         void getPointFailed_not_exists(){
             /**
@@ -260,14 +300,15 @@ public class PointV1ApiE2ETest {
                 new HttpEntity<>(request1),
                 new ParameterizedTypeReference<>() {});
 
-            PointCommand.Create command = new Create(loginId, 1000L);
+            PointCommand.Create command = new Create(loginId+"1", 1000L);
 
-
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.add(CustomHeader.USER_ID, loginId+"1");
 
             ResponseEntity<ApiResponse<Response>> res = testRestTemplate.exchange(
                 ENDPOINT,
                 HttpMethod.GET,
-                new HttpEntity<>(command, null),
+                new HttpEntity<>(command, httpHeaders),
                 new ParameterizedTypeReference<>() {});
 
             assertAll(

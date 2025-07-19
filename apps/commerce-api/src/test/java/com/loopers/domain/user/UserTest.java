@@ -39,7 +39,7 @@ public class UserTest {
             );
         }
 
-        @DisplayName("실패 - loginId 누락")
+        @DisplayName("실패 - loginId 누락시 400에러 발생")
         @Test
         void createUser_when_loginId_null(){
             //given
@@ -53,7 +53,7 @@ public class UserTest {
             assertThat(response.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
         }
 
-        @DisplayName("실패 - loginId 10자리 초과")
+        @DisplayName("실패 - loginId 10자리 초과시 400에러 발생")
         @Test
         void createUser_when_loginId_over_10_char(){
             //given
@@ -67,7 +67,7 @@ public class UserTest {
             assertThat(response.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
         }
 
-        @DisplayName("실패 - loginId 유효하지 않은 문자열")
+        @DisplayName("실패 - loginId 유효하지 않은 문자열일때 400에러 발생")
         @Test
         void createUser_when_loginId_invalid_char(){
             //given

@@ -6,6 +6,7 @@ import com.loopers.domain.user.UserInfo;
 import com.loopers.domain.user.UserService;
 import com.loopers.interfaces.api.ApiResponse;
 
+import com.loopers.support.header.CustomHeader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -32,7 +33,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/me")
-    public ApiResponse<UserDto.Response> getUserInfo(@RequestHeader(value = "X-USER-ID") String userId) {
+    public ApiResponse<UserDto.Response> getUserInfo(@RequestHeader(value = CustomHeader.USER_ID) String userId) {
 
         log.debug("::: inquiry loginId ::: {}", userId);
 

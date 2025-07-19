@@ -8,7 +8,6 @@ import com.loopers.support.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 
 public class PointTest {
@@ -32,9 +31,10 @@ public class PointTest {
         assert pointModel.getPoint().equals(pointValue);
     }
 
-    @DisplayName("실패 - 포인트 충전")
+    @DisplayName("실패 - 0또는 마이너스 포인트 충전시 400에러 발생")
     @ParameterizedTest
     @CsvSource({
+        "chicken, 0",
         "utlee, -10000",
         "test, -1000000",
         "player, -10000000"
@@ -46,6 +46,7 @@ public class PointTest {
             PointEntity pointModel = new PointEntity(loginId, pointValue);
         });
 
+        //then
         assertThat(response.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
     }
 }
