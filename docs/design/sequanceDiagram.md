@@ -110,6 +110,7 @@ ProductController-->>-user : ApiResponse<ProductInfo>
 
 ### 상품 좋아요
 #### 기능 요구사항
+- 본인것만 핸들링 되어야 함(X-USER-ID 헤더 검증)
 - 상품 좋아요 등록/취소
 - 좋아요, 취소는 상품당 단 1번만 가능
 - 좋아요 많은 순 정렬 조건 가능
@@ -139,6 +140,7 @@ sequenceDiagram
 
 ### 주문생성
 #### 기능 요구사항
+- 본인만 되어야 함(X-USER-ID 헤더 검증)
 - 주문 생성 및 결제 흐름 (재고 차감, 포인트 차감, 외부 시스템 연동)
 - 재고 확인 후 실결제 프로세스
 - 포인트금액이 구매물품보다 커야 함
@@ -167,6 +169,57 @@ sequenceDiagram
 
   OrderService->>+OrderItemRepository : save(orderItemEntities)
   OrderItemRepository->>+DB : execute insert
+  DB-->>-OrderItemRepository : success
+  OrderItemRepository-->>-OrderService : List<OrderItemEntity>
+
+  OrderService-->>-OrderController : ApiResponse<OrderInfo>
+  OrderController-->>-user : ApiResponse<OrderResponse>
+```
+
+### 주문 리스트 조회
+#### 기능 요구사항
+- 본인것만 조회되어야 함(X-USER-ID 헤더 검증)
+- 페이징
+- 최근순 정렬
+
+```mermaid
+sequenceDiagram
+  actor user
+  user->>+OrderController : GET /api/v1/orders/page={page}&size={size}&sort={sort}
+  OrderController->>+OrderService : orderInquiry(orderRequest)
+
+  OrderService->>+OrderRepository : findByOrderId(orderEntity)
+  OrderRepository->>+DB : execute select
+  DB-->>-OrderRepository : success
+  OrderRepository-->>-OrderService : orderEntity
+
+  OrderService->>+OrderItemRepository : findByOrderItemId(orderEntity)
+  OrderItemRepository->>+DB : execute select
+  DB-->>-OrderItemRepository : success
+  OrderItemRepository-->>-OrderService : List<OrderItemEntity>
+
+  OrderService-->>-OrderController : ApiResponse<OrderInfo>
+  OrderController-->>-user : ApiResponse<OrderResponse>
+```
+
+
+### 주문 상세 조회
+#### 기능 요구사항
+- 본인것만 조회되어야 함(X-USER-ID 헤더 검증)
+
+```mermaid
+sequenceDiagram
+  actor user
+  user->>+OrderController : GET /api/v1/orders/{orderId}
+  OrderController->>+OrderService : orderInquiry(orderRequest)
+
+  OrderService->>+OrderRepository : findByOrderId(orderEntity)
+  OrderRepository->>+DB : execute select
+  DB-->>-OrderRepository : success
+  OrderRepository-->>-OrderService : orderEntity
+
+  OrderService->>+OrderItemRepository : findByOrderItemId(orderEntity)
+  OrderItemRepository->>+DB : execute select
   DB-->>-OrderItemRepository : success
   OrderItemRepository-->>-OrderService : List<OrderItemEntity>
 
