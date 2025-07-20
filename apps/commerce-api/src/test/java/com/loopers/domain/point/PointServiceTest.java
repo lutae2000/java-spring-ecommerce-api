@@ -69,7 +69,7 @@ public class PointServiceTest {
         }
 
         @Test
-        @DisplayName("실패 - 회원 미존재")
+        @DisplayName("실패 - 회원 미존재시 404 에러 발생")
         void inquiryPoint_when_not_exists_user(){
 
             //when

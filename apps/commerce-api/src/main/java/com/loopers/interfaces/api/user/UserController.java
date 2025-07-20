@@ -6,17 +6,15 @@ import com.loopers.domain.user.UserInfo;
 import com.loopers.domain.user.UserService;
 import com.loopers.interfaces.api.ApiResponse;
 
+import com.loopers.support.annotation.RequireLoginHeader;
 import com.loopers.support.header.CustomHeader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -33,7 +31,10 @@ public class UserController {
      * @return
      */
     @GetMapping("/me")
-    public ApiResponse<UserDto.Response> getUserInfo(@RequestHeader(value = CustomHeader.USER_ID) String userId) {
+    @RequireLoginHeader
+    public ApiResponse<UserDto.Response> getUserInfo(
+        @RequestHeader(value = CustomHeader.USER_ID, required = false) String userId
+    ) {
 
         log.debug("::: inquiry loginId ::: {}", userId);
 
@@ -48,7 +49,9 @@ public class UserController {
      * @return
      */
     @PostMapping("")
-    public ApiResponse<UserDto.Response> createUser(@RequestBody UserDto.SignUpRequest user) {
+    public ApiResponse<UserDto.Response> createUser(
+        @RequestBody UserDto.SignUpRequest user
+    ) {
 
         log.debug("::: Creating user with login Object ::: {}", user);
 

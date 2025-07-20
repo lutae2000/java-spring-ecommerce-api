@@ -31,34 +31,33 @@ public class PointService {
 
         log.debug("::: chargePoint ::: command: {}", command);
 
-        Optional<User> user = userRepository.selectUserByLoginId(command.loginId());
-        if(user.isEmpty()){
-            throw new CoreException(ErrorType.NOT_FOUND, "존재하지 않는 회원입니다");
-        }
+        User user = userRepository.selectUserByLoginId(command.loginId())
+            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "존재하지 않는 회원입니다"));
 
         if(command.point() <= 0){
             throw new CoreException(ErrorType.BAD_REQUEST, "충전하려는 포인트가 0이하가 될 수 없습니다");
         }
 
         Long totalPoint = 0L;
-        PointEntity pointEntity = pointRepository.findByLoginId(user.get().getLoginId()).orElse(null);
-        if(ObjectUtils.isEmpty(pointEntity)) {  //값이 없으면 최초 적립
+        PointEntity pointEntity = pointRepository.findByLoginId(user.getLoginId()).orElse(null);
+
+        if(ObjectUtils.isEmpty(pointEntity)) {  //값이 없으면 회원가입 후 최초 포인트 적립
             totalPoint = command.point();
-        } else {
+            pointEntity = PointEntity.builder()
+                .loginId(user.getLoginId())
+                .point(totalPoint)
+                .build();
+        } else {    //조회해온 포인트 최종값 + 충전할 포인트
             totalPoint = pointEntity.getPoint() + command.point();
+            pointEntity.setPoint(totalPoint);
         }
 
-        pointRepository.save(user.get().getLoginId(), totalPoint);
+        pointRepository.save(pointEntity);
 
-
-        PointEntity result = pointRepository.findByLoginId(user.get().getLoginId()).orElse(null);
-
-        PointInfo pointInfo = PointInfo.builder()
-            .loginId(user.get().getLoginId())
-            .point(ObjectUtils.isEmpty(result.getPoint()) ? 0L : result.getPoint())
+        return PointInfo.builder()
+            .loginId(pointEntity.getLoginId())
+            .point(pointEntity.getPoint())
             .build();
-
-        return pointInfo;
     }
 
 

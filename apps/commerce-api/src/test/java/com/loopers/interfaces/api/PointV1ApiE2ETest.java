@@ -104,8 +104,8 @@ public class PointV1ApiE2ETest {
         @DisplayName("성공 - 포인트를 여러건 충전시 누적된 값이 응답으로 와야함")
         @Test
         void accumulatePointSuccess_lotsOfTimesPointChargeValue(){
-            Long[] chargeAmounts = {10000L, 20000L};
-            Long[] expectedResults = {10000L, 30000L};
+            Long[] chargeAmounts = {10000L, 20000L};    //중전할 포인트
+            Long[] expectedResults = {10000L, 30000L};  //예상 누적 포인트
             /**
              * given
              * given 회원 생성
@@ -243,7 +243,7 @@ public class PointV1ApiE2ETest {
 
 
             assertAll(
-                () -> assertTrue(res.getStatusCode().is4xxClientError())
+                () -> assertTrue(res.getStatusCode().is2xxSuccessful())
             );
         }
 

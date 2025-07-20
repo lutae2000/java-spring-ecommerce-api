@@ -5,10 +5,14 @@ import com.loopers.domain.point.PointCommand.Create;
 import com.loopers.domain.point.PointInfo;
 import com.loopers.domain.point.PointService;
 import com.loopers.interfaces.api.ApiResponse;
+import com.loopers.support.annotation.RequireLoginHeader;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import com.loopers.support.header.CustomHeader;
 import io.micrometer.common.util.StringUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RequestMapping("/api/v1/points")
 @RequiredArgsConstructor
+@RequireLoginHeader
 public class PointController {
 
     private final PointService pointService;
@@ -33,7 +38,9 @@ public class PointController {
      * @return
      */
     @GetMapping("")
-    public ApiResponse<PointDto.Response> getPointInfo(@RequestHeader(value = CustomHeader.USER_ID, required = false) String loginId) {
+    public ApiResponse<PointDto.Response> getPointInfo(
+        @RequestHeader(value = CustomHeader.USER_ID, required = false) String loginId
+    ) {
 
         if(StringUtils.isBlank(loginId)){
             throw new CoreException(ErrorType.BAD_REQUEST, "X-USER-ID 헤더값은 필수 입니다");
@@ -53,10 +60,6 @@ public class PointController {
     public ApiResponse<PointDto.Response> chargePoint(
         @RequestHeader(value = CustomHeader.USER_ID, required = false) String loginId,
         @RequestBody PointDto.Request request) {
-
-        if(StringUtils.isBlank(loginId)){
-            throw new CoreException(ErrorType.BAD_REQUEST, "X-USER-ID 헤더값은 필수 입니다");
-        }
 
 
         log.debug("::: chargePoint ::: loginId: {}, request: {}", loginId, request);

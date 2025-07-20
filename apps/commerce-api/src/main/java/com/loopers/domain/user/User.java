@@ -5,13 +5,17 @@ import com.loopers.domain.domainEnum.Gender;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
 @Getter
@@ -27,6 +31,8 @@ public class User extends BaseEntity {
 
     private String birthday;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender")
     private Gender gender;
 
     @Builder
@@ -34,7 +40,7 @@ public class User extends BaseEntity {
         loginIdValid(loginId);
         emailValid(email);
         birthdayValid(birthday);
-
+        genderValid(gender);
         this.loginId = loginId;
         this.email = email;
         this.birthday = birthday;
@@ -67,6 +73,12 @@ public class User extends BaseEntity {
 
         if (!birthday.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
             throw new CoreException(ErrorType.BAD_REQUEST, "생년월일은 YYYY-MM-DD 형식이어야 합니다");
+        }
+    }
+
+    private void genderValid(Gender gender){
+        if(ObjectUtils.isEmpty(gender)){
+            throw new CoreException(ErrorType.BAD_REQUEST, "성별 값은 필수 입니다");
         }
     }
 

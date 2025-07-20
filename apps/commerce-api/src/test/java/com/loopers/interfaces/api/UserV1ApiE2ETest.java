@@ -41,7 +41,7 @@ public class UserV1ApiE2ETest {
         databaseCleanUp.truncateAllTables();
     }
 
-    @DisplayName("/api/v1/users")
+    @DisplayName("POST /api/v1/users")
     @Nested
     class SignUp {
 
@@ -76,7 +76,7 @@ public class UserV1ApiE2ETest {
 
         }
 
-        @DisplayName("실패 - 생성된 유저로 재시도")
+        @DisplayName("실패 - 이미 생성된 유저로 가입 시도시 400에러")
         @Test
         void createUserDuplicated(){
 
@@ -112,6 +112,56 @@ public class UserV1ApiE2ETest {
 
             assertAll(
                 () -> assertTrue(response2.getStatusCode().is4xxClientError())
+            );
+        }
+
+        @DisplayName("실패 - 잘못된 이메일 형식으로 가입 시도시 400에러")
+        @Test
+        void createUser_invalid_email(){
+
+            String requestURL =  ENDPOINT_SIGNUP;
+
+            UserDto.SignUpRequest request1 = UserDto.SignUpRequest.builder()
+                .birthday(birthday)
+                .email("123@com")
+                .gender(Gender.valueOf(gender))
+                .loginId(loginId)
+                .build();
+
+            //최초 생성
+            ResponseEntity<ApiResponse<UserDto.Response>> response = testRestTemplate.exchange(
+                requestURL,
+                HttpMethod.POST,
+                new HttpEntity<>(request1),
+                new ParameterizedTypeReference<>() {});
+
+            assertAll(
+                () -> assertTrue(response.getStatusCode().is4xxClientError())
+            );
+        }
+
+        @DisplayName("실패 - 성별 선택없이 회원가입시 400에러")
+        @Test
+        void createUser_non_gender(){
+
+            String requestURL =  ENDPOINT_SIGNUP;
+
+            UserDto.SignUpRequest request1 = UserDto.SignUpRequest.builder()
+                .birthday(birthday)
+                .email(email)
+                .gender(null)
+                .loginId(loginId)
+                .build();
+
+            //최초 생성
+            ResponseEntity<ApiResponse<UserDto.Response>> response = testRestTemplate.exchange(
+                requestURL,
+                HttpMethod.POST,
+                new HttpEntity<>(request1),
+                new ParameterizedTypeReference<>() {});
+
+            assertAll(
+                () -> assertTrue(response.getStatusCode().is4xxClientError())
             );
         }
     }

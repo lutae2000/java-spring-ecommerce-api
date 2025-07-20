@@ -4,7 +4,7 @@ import java.util.Optional;
 
 public interface PointRepository {
 
-    void save(String loginId, Long point);
+    void save(PointEntity pointEntity);
 
     Optional<PointEntity> findByLoginId(String loginId);
 }

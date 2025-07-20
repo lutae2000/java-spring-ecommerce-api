@@ -1,11 +1,15 @@
 package com.loopers.domain.domainEnum;
 
 
+import com.loopers.support.annotation.RequireLoginHeader;
+import jakarta.persistence.Embeddable;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
+@AllArgsConstructor
 public enum Gender {
 
     M("남성"),

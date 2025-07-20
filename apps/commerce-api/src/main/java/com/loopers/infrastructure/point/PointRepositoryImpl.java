@@ -12,8 +12,8 @@ public class PointRepositoryImpl implements PointRepository {
     private final PointJPARepository pointJPARepository;
 
     @Override
-    public void save(String loginId, Long point) {
-        pointJPARepository.save(PointEntity.builder().loginId(loginId).point(point).build());
+    public void save(PointEntity pointEntity) {
+        pointJPARepository.save(pointEntity);
     }
 
     @Override
