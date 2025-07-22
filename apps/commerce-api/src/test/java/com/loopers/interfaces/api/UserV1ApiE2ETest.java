@@ -12,6 +12,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -116,14 +118,15 @@ public class UserV1ApiE2ETest {
         }
 
         @DisplayName("실패 - 잘못된 이메일 형식으로 가입 시도시 400에러")
-        @Test
-        void createUser_invalid_email(){
+        @ParameterizedTest
+        @CsvSource({"abc@com", "abc.com", "abc@", "@abc.com", "@abc", "abc@.com", "@abc@.com"})
+        void createUser_invalid_email(String email ){
 
             String requestURL =  ENDPOINT_SIGNUP;
 
             UserDto.SignUpRequest request1 = UserDto.SignUpRequest.builder()
                 .birthday(birthday)
-                .email("123@com")
+                .email(email)
                 .gender(Gender.valueOf(gender))
                 .loginId(loginId)
                 .build();
