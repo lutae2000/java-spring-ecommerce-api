@@ -52,7 +52,7 @@ sequenceDiagram
 #### 기능 요구사항
 - 선택 제품의 상세정보 노출
 - 좋아요 카운팅
-- 동일 브랜드내 주문량 많은 상품
+- 좋아요 기능
 - 주문수
 
 
@@ -113,7 +113,6 @@ ProductController-->>-user : ApiResponse<ProductInfo>
 - 본인것만 핸들링 되어야 함(X-USER-ID 헤더 검증)
 - 상품 좋아요 등록/취소
 - 좋아요, 취소는 상품당 단 1번만 가능
-- 좋아요 많은 순 정렬 조건 가능
 
 ```mermaid
 sequenceDiagram
