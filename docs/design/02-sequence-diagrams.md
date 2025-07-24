@@ -289,9 +289,9 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor user
-    participant AuthService as 인증 서비스
-    participant OrderService as 주문 서비스
-    participant ReviewService as 리뷰 서비스
+    participant AuthService as 인증
+    participant OrderService as 주문
+    participant ReviewService as 리뷰
 
     user->>+AuthService: X-USER-ID 헤더 인증 요청
 
@@ -320,8 +320,8 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor user
-    participant ProductService as 상품 서비스
-    participant ReviewService as 리뷰 서비스
+    participant ProductService as 상품
+    participant ReviewService as 리뷰
 
     user->>+ProductService: 상품 리뷰 조회
     ProductService->>+ReviewService: 상품에 대한 리뷰 화인
