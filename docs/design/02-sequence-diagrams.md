@@ -1,13 +1,12 @@
-### 상품 목록 조회
-#### 기능 요구사항
+## 📌상품 목록 조회
 - 상품리스트
 - 페이징
 - 좋아요
-- 브랜드 필터
-- 최근 등록순
-- 가격 정렬
-- 주문수 정렬
-- 좋아요 정렬
+- 브랜드 필터 가능여부 옵셔널
+- 최근 등록순 가능여부 옵셔널
+- 가격 정렬 가능여부 옵셔널
+- 주문수 정렬 가능여부 옵셔널
+- 좋아요 정렬 가능여부 옵셔널
 
 ```mermaid
 sequenceDiagram
@@ -37,8 +36,7 @@ sequenceDiagram
 
 ---
 
-### 상품상세
-#### 기능 요구사항
+## 📌상품상세
 - 선택 제품의 상세정보 노출
 - 브랜드 소개도 포함
 - 좋아요 카운팅
@@ -57,8 +55,7 @@ sequenceDiagram
     alt 상품 존재하지 않음
         ProductService-->>Client: "상품을 찾을 수 없습니다"
     else 상품 존재함
-        ProductService->>BrandService: 브랜드 정보 조회 (product.brandId)
-
+        ProductService->>BrandService: 브랜드 정보 조회
         alt 브랜드 없음
             BrandService-->>ProductService: 브랜드 정보 없음
             ProductService-->>Client: "브랜드 정보를 찾을 수 없습니다"
@@ -72,8 +69,7 @@ sequenceDiagram
 ```
 ---
 
-### 브랜드 조회
-#### 기능 요구사항
+## 📌브랜드 조회
 - 브랜드 필터로 상품조회
 - 좋아요 카운팅
 - 주문량 정렬
@@ -106,8 +102,7 @@ sequenceDiagram
 ```
 ---
 
-### 상품 좋아요
-#### 기능 요구사항
+## 📌상품 좋아요
 - 본인것만 핸들링 되어야 함(X-USER-ID 헤더 검증)
 - 상품 좋아요 등록
 - 좋아요, 취소는 상품당 단 1번만 가능
@@ -142,7 +137,7 @@ sequenceDiagram
   end
 ```
 
-### 상품 좋아요 취소
+## 📌상품 좋아요 취소
 - 본인것만 핸들링 되어야 함(X-USER-ID 헤더 검증)
 - 상품 좋아요 등록
 - 좋아요 상품당 단 1번만 가능
@@ -159,8 +154,7 @@ sequenceDiagram
     alt 비회원
         AuthService-->>user: "회원만 이용 가능한 기능입니다"
     else 회원
-        AuthService-->>ProductService: getProduct(productId)
-
+        AuthService-->>ProductService: 상품 조회
         alt 상품 없음
             ProductService-->>AuthService: "상품이 존재하지 않습니다"
             AuthService-->>user: "상품이 존재하지 않습니다"
@@ -181,8 +175,7 @@ sequenceDiagram
 ```
 ---
 
-### 주문생성
-#### 기능 요구사항
+## 📌주문생성
 - 본인만 되어야 함(X-USER-ID 헤더 검증)
 - 주문 생성 및 결제 흐름 (재고 차감, 포인트 차감, 외부 시스템 연동)
 - 재고 확인 후 실결제 프로세스
@@ -198,16 +191,16 @@ sequenceDiagram
     participant PointService as 포인트
     participant PaymentGateway as 외부
 
-    user->>+OrderService: POST /api/v1/orders (with X-USER-ID)
+    user->>+OrderService: POST /api/v1/orders
 
-    OrderService->>AuthService: validateUser(X-USER-ID)
+    OrderService->>AuthService: 헤더값 (X-USER-ID) 검증
 
     alt 비회원 또는 사용자 불일치
         AuthService-->>OrderService: invalid
         OrderService-->>user: "본인만 주문 가능합니다"
     else 회원 확인 완료
-        AuthService-->>OrderService: OK
-        OrderService->>ProductService: checkStock(productIds)
+        AuthService-->>OrderService: 인가된 요청확인
+        OrderService->>ProductService: 재고 여부 확인
 
         alt 재고 부족
             ProductService-->>OrderService: 재고 여부 확인
@@ -234,8 +227,7 @@ sequenceDiagram
     end
 ```
 ---
-### 주문 리스트 조회
-#### 기능 요구사항
+## 📌주문 리스트 조회
 - 본인것만 조회되어야 함(X-USER-ID 헤더 검증)
 - 페이징
 - 최근순 정렬
@@ -260,8 +252,7 @@ sequenceDiagram
 ```
 
 ---
-### 주문 상세 조회
-#### 기능 요구사항
+## 📌주문 상세 조회
 - 본인이 주문한것만 조회되어야 함(X-USER-ID 헤더 검증)
 
 ```mermaid
@@ -282,8 +273,7 @@ sequenceDiagram
     end
 ```
 ---
-### 주문 상품에 대해 리뷰 남기기
-#### 기능 요구사항
+## 📌주문 상품에 대해 리뷰 남기기
 - 본인이 주문한 주문번호에 대해 구매확정한 상태에서 작성가능
 
 ```mermaid
@@ -313,8 +303,7 @@ sequenceDiagram
     end
 ```
 ---
-### 리뷰 확인
-#### 기능 요구사항
+### 📌리뷰 확인
 - 상품에 리뷰가 없을때는 빈 리스트 반환
 
 ```mermaid
