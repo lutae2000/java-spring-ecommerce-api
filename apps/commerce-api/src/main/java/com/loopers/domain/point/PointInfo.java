@@ -24,7 +24,7 @@ public class PointInfo {
     public static PointInfo from(PointEntity pointEntity){
         return PointInfo.builder()
             .point(pointEntity.getPoint() == null ? 0L : pointEntity.getPoint())
-            .loginId(pointEntity.getLoginId())
+            .loginId(pointEntity.getUserId())
             .build();
     }
 

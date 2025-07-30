@@ -19,13 +19,13 @@ public class UserService {
 
     /**
      * 유저정보 있는지 조회
-     * @param loginId
+     * @param userId
      * @return UserDto
      */
-    public UserInfo getUserInfo(String loginId) {
-        log.debug("::: inquiry loginId ::: loginId: {}", loginId);
+    public UserInfo getUserInfo(String userId) {
+        log.debug("::: inquiry userId ::: userId: {}", userId);
 
-        Optional<User> user = userRepository.selectUserByLoginId(loginId);
+        Optional<User> user = userRepository.selectUserByUserId(userId);
 
         if(user.isPresent()){
             return UserInfo.from(user.get());
@@ -45,7 +45,7 @@ public class UserService {
 
         log.debug("::: Creating user with login Object ::: user: {}", user);
 
-        Optional<User> result = userRepository.selectUserByLoginId(user.getLoginId());
+        Optional<User> result = userRepository.selectUserByUserId(user.getUserId());
 
         if(result.isPresent()){   //이미 회원가입 정보 존재여부 확인
             throw new CoreException(ErrorType.CONFLICT, "이미 존재하는 회원ID 입니다");

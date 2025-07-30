@@ -54,7 +54,7 @@ public class UserServiceTest {
 
             //then
             assertAll(
-                () -> assertThat(user.getLoginId()).isEqualTo(loginId),
+                () -> assertThat(user.getUserId()).isEqualTo(loginId),
                 () -> assertThat(user.getBirthday()).isEqualTo(birthday),
                 () -> assertThat(user.getEmail()).isEqualTo(email),
                 () -> assertThat(user.getGender()).isEqualTo(gender)
@@ -136,7 +136,7 @@ public class UserServiceTest {
 
             //then
             assertAll(
-                () -> assertThat(result.getLoginId()).isEqualTo("utlee"),
+                () -> assertThat(result.getUserId()).isEqualTo("utlee"),
                 () -> assertThat(result.getGender()).isEqualTo(gender),
                 () -> assertThat(result.getEmail()).isEqualTo(email),
                 () -> assertThat(result.getBirthday()).isEqualTo(birthday)

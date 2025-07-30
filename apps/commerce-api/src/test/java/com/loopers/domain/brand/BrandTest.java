@@ -1,34 +1,34 @@
-package com.loopers.domain.point;
+package com.loopers.domain.brand;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.loopers.domain.point.PointEntity;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-
-public class PointTest {
-
-    @DisplayName("성공 - 포인트 충전")
+public class BrandTest {
+    @DisplayName("성공 - 브랜드 객체 생성")
     @ParameterizedTest
     @CsvSource({
-        "utlee, 10000",
-        "test, 1000000",
-        "player, 10000000"
+        "AA, 브랜드 AA, 브랜드 AA 설명,  img_url, true",
+        "BB, 브랜드 BB, 브랜드 BB 설명, null, true",
+        "CC, 브랜드 CC, 브랜드 CC 설명, img_url, false"
     })
-    void pointCharge(String loginId, Long pointValue){
+    void brandCreate(String code, String name, String description, String imgUrl, Boolean useYn){
 
         //given
 
         //when
-        PointEntity pointModel = new PointEntity(loginId, pointValue);
+        Brand brand = new Brand(code, name, description, imgUrl, useYn);
 
         //then
-        assert pointModel.getUserId().equals(loginId);
-        assert pointModel.getPoint().equals(pointValue);
+        assert brand.getCode().equals(code);
+        assert brand.getName().equals(name);
+        assert brand.getDescription().equals(description);
     }
 
     @DisplayName("실패 - 0또는 마이너스 포인트 충전시 400에러 발생")

@@ -8,7 +8,7 @@ public class PointCommand {
     public record Create(String loginId, Long point) {
         public PointEntity toPointEntity() {
             return PointEntity.builder()
-                .loginId(this.loginId)
+                .userId(this.loginId)
                 .point(this.point)
                 .build();
         }

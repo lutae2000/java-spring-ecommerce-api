@@ -30,7 +30,7 @@ public class UserDto {
 
         public User toUserEntity() {
             return User.builder()
-                .loginId(this.loginId)
+                .userId(this.loginId)
                 .email(this.email)
                 .birthday(this.birthday)
                 .gender(this.gender)
@@ -52,7 +52,7 @@ public class UserDto {
         private Gender gender;
 
         public static Response from(UserInfo userInfo){
-            return new Response(userInfo.getId(), userInfo.getLoginId(), userInfo.getEmail(), userInfo.getBirthday(), userInfo.getGender());
+            return new Response(userInfo.getId(), userInfo.getUserId(), userInfo.getEmail(), userInfo.getBirthday(), userInfo.getGender());
         }
     }
 

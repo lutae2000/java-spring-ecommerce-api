@@ -19,13 +19,13 @@ import lombok.Setter;
 public class PointEntity {
 
     @Id
-    private String loginId;
+    private String userId;
 
     private Long point;
 
-    public PointEntity(String loginId, Long point) {
+    public PointEntity(String userId, Long point) {
         this.point = point;
-        this.loginId = loginId;
+        this.userId = userId;
         validPoint(point);
     }
 

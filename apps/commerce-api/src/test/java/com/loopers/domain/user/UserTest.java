@@ -32,7 +32,7 @@ public class UserTest {
                 User user = new User(loginId, email, birthday, Gender.valueOf(gender));
             //then
             assertAll(
-                () -> assertThat(user.getLoginId()).isNotNull(),
+                () -> assertThat(user.getUserId()).isNotNull(),
                 () -> assertThat(user.getBirthday()).isEqualTo(birthday),
                 () -> assertThat(user.getGender()).isEqualTo(Gender.valueOf(gender)),
                 () -> assertThat(user.getEmail()).isEqualTo(email)
