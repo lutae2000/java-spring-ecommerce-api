@@ -41,4 +41,25 @@ public class LikeRepositoryImpl implements LikeRepository {
     public void deleteByProductIdAndUserId(String userId , String productId) {
         likeJpaRepository.deleteByUserIdAndProductId(userId, productId);
     }
+
+    /**
+     * 이미 좋아요를 한 내역이 있는지 체크
+     * @param userId
+     * @param productId
+     * @return
+     */
+    @Override
+    public Long countLikeByUserIdAndProductId(String userId, String productId) {
+        return likeJpaRepository.countLikeByUserIdAndProductId(userId, productId);
+    }
+
+    /**
+     * 물품 하나에 대해 좋아요 카운팅
+     * @param productId
+     * @return
+     */
+    @Override
+    public Long countByProductId(String productId) {
+        return likeJpaRepository.countByProductId(productId);
+    }
 }

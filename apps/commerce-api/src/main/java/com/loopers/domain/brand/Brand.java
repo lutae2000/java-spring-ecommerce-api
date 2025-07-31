@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 @Getter
 @Setter
 public class Brand extends BaseEntity {
+
     private String code;
     private String name;
     private String description;

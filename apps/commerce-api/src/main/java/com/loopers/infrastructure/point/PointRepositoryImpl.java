@@ -17,7 +17,7 @@ public class PointRepositoryImpl implements PointRepository {
     }
 
     @Override
-    public Optional<PointEntity> findByLoginId(String loginId) {
-        return Optional.ofNullable(pointJPARepository.findByLoginId(loginId));
+    public Optional<PointEntity> findByUserId(String userId) {
+        return Optional.ofNullable(pointJPARepository.findByUserId(userId));
     }
 }

@@ -13,7 +13,7 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public Optional<User> selectUserByUserId(String userId) {
-        return userJpaRepository.findByLoginId(userId);
+        return userJpaRepository.findByUserId(userId);
     }
 
     @Override

@@ -5,15 +5,18 @@ import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "order_detail")
-@Embeddable
+@Table(name = "order_details")
 public class OrderDetail {
     @Id
+    @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
+    private Long id;
+
     private String orderNo;
     private String productId;
     private Long quantity;

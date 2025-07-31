@@ -31,19 +31,36 @@ public class BrandTest {
         assert brand.getDescription().equals(description);
     }
 
-    @DisplayName("실패 - 0또는 마이너스 포인트 충전시 400에러 발생")
+    @DisplayName("실패 - 브랜드 제목 누락시 400에러")
     @ParameterizedTest
     @CsvSource({
-        "chicken, 0",
-        "utlee, -10000",
-        "test, -1000000",
-        "player, -10000000"
+        "AA, , 브랜드 AA 설명,  img_url, true",
+        "BB, , 브랜드 BB 설명, , true",
+        "CC, , 브랜드 CC 설명, img_url, false"
     })
-    void pointChargeFail(String loginId, Long pointValue){
+    void brandName_null_fail(String code, String name, String description, String imgUrl, Boolean useYn){
 
         //when
         CoreException response = assertThrows(CoreException.class, () -> {
-            PointEntity pointModel = new PointEntity(loginId, pointValue);
+            Brand brand = new Brand(code, name, description, imgUrl, useYn);
+        });
+
+        //then
+        assertThat(response.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
+    }
+
+    @DisplayName("실패 - 브랜드 설명 누락시 400에러")
+    @ParameterizedTest
+    @CsvSource({
+        "AA, 나이키, ,  img_url, true",
+        "BB, hoka, , , true",
+        "CC, 아디다스, , img_url, false"
+    })
+    void brandDesc_null_fail(String code, String name, String description, String imgUrl, Boolean useYn){
+
+        //when
+        CoreException response = assertThrows(CoreException.class, () -> {
+            Brand brand = new Brand(code, name, description, imgUrl, useYn);
         });
 
         //then

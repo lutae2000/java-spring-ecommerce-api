@@ -31,7 +31,7 @@ public class PointDto {
         public Long point;
 
         public static Response from(PointInfo pointInfo){
-            return new Response(pointInfo.getLoginId(), pointInfo.getPoint());
+            return new Response(pointInfo.getUserId(), pointInfo.getPoint());
         }
     }
 }

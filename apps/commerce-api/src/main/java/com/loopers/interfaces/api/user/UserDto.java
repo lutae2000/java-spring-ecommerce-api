@@ -23,14 +23,14 @@ public class UserDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class SignUpRequest{
-        private String loginId;
+        private String userId;
         private String email;
         private String birthday;
         private Gender gender;
 
         public User toUserEntity() {
             return User.builder()
-                .userId(this.loginId)
+                .userId(this.userId)
                 .email(this.email)
                 .birthday(this.birthday)
                 .gender(this.gender)

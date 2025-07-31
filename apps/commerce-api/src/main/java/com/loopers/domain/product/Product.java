@@ -16,7 +16,7 @@ import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 @Entity
-@Table(name = "product")
+@Table(name = "products")
 @NoArgsConstructor
 @Getter
 @Setter
@@ -30,21 +30,21 @@ public class Product extends BaseEntity {
     private String imgURL;
     private String description;
     @Transient
-    private Brand brand;
+    private String brandCode;
     private String category1;
     private String category2;
     private String category3;
     private boolean useYn;
     private Long like;
 
-    public Product(String code, String name, BigDecimal price, int quantity, String imgURL, String description, Brand brand, String category1, String category2, String category3, boolean useYn, Long like) {
+    public Product(String code, String name, BigDecimal price, int quantity, String imgURL, String description, String brandCode, String category1, String category2, String category3, boolean useYn, Long like) {
         this.code = code;
         this.name = name;
         this.price = price;
         this.quantity = quantity;
         this.imgURL = imgURL;
         this.description = description;
-        this.brand = brand;
+        this.brandCode = brandCode;
         this.category1 = category1;
         this.category2 = category2;
         this.category3 = category3;

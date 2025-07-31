@@ -16,12 +16,12 @@ public class ProductTest {
     @DisplayName("성공 - ")
     @ParameterizedTest
     @CsvSource({
-        "ABC, 상품1, 10000, 10, null, null, ",
-        "ABC1, 상품2, 0, ",
-        "player, 10000000"
+        "ABC, 상품1, 10000, 10, , none, nike, shoes,  ,  ,true , ",
+        "CDEFG, 상품2, 20000, 10, , none, t-shirts, ,  ,  ,false , ",
+        "C1, 상품3, 30000, 10, , none, adidas, shoes,  ,  ,true , ",
     })
     void createProduct_succeed(String code, String name, BigDecimal price, int quantity, String imgURL,
-                                String description, Brand brandCode, String category1, String category2, String category3,
+                                String description, String brandCode, String category1, String category2, String category3,
                                 boolean useYn, Long like){
 
         //given

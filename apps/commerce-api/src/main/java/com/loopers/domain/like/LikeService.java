@@ -14,12 +14,17 @@ public class LikeService {
      */
     public Long like(String userId, String productId){
         Optional<Like> existLike = likeRepository.findByUserIdAndProductId(userId, productId);
-        if(existLike.isPresent()){
-            return likeRepository.save(existLike.get()).getId();
-        } else {    //좋아요가 하나도 없을 때
-            return 0L;
-        }
+        if(existLike.isEmpty()) {
 
+            Like like = Like.builder()
+                .userId(userId)
+                .productId(productId)
+                .likeYn(true)
+                .build();
+
+            likeRepository.save(like);
+        }
+        return likeRepository.countByProductId(productId);
     }
 
     /**
@@ -27,5 +32,15 @@ public class LikeService {
      */
     public void unlike(String userId, String productId){
         likeRepository.deleteByProductIdAndUserId(userId, productId);
+    }
+
+    /**
+     * Like 카운팅
+     * @param userId
+     * @param productId
+     * @return
+     */
+    public Long countLike(String productId){
+        return likeRepository.countByProductId(productId);
     }
 }

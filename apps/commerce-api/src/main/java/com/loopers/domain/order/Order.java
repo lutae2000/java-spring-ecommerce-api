@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
@@ -17,7 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "order")
+@Table(name = "orders")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -30,6 +31,7 @@ public class Order extends BaseEntity {
     private String orderNo;
 
     @OneToMany(cascade = CascadeType.ALL)//연결된 객체와 같이 저장/삭제
+    @JoinColumn(name = "order_no")
     private List<OrderDetail> orderDetailList;
 
     /**

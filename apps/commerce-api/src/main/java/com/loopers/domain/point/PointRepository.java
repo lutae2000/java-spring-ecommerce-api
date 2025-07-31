@@ -6,5 +6,5 @@ public interface PointRepository {
 
     void save(PointEntity pointEntity);
 
-    Optional<PointEntity> findByLoginId(String loginId);
+    Optional<PointEntity> findByUserId(String userId);
 }

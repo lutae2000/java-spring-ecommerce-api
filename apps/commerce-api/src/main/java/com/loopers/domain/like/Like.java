@@ -9,19 +9,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
 @Entity
 @Table(name = "likes")
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@Getter
 public class Like extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
     private String productId;
     private String userId;
     private Boolean likeYn;

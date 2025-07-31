@@ -1,13 +1,14 @@
 package com.loopers.infrastructure.brand;
 
 import com.loopers.domain.brand.Brand;
+import com.loopers.domain.brand.BrandRepository;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class BrandRepositoryImpl implements BrandJpaRepository{
+public class BrandRepositoryImpl implements BrandRepository {
     private final BrandJpaRepository brandJpaRepository;
 
 
@@ -18,11 +19,12 @@ public class BrandRepositoryImpl implements BrandJpaRepository{
      */
     @Override
     public Optional<Brand> findByBrandCode(String brandCode) {
-        return brandJpaRepository.findByBrandCode(brandCode);
+        return brandJpaRepository.findByCode(brandCode);
     }
 
     /**
      * 브랜드 저장
+     *
      * @param brand
      * @return
      */
@@ -37,6 +39,6 @@ public class BrandRepositoryImpl implements BrandJpaRepository{
      */
     @Override
     public void deleteByBrandCode(String brandCode) {
-        brandJpaRepository.deleteByBrandCode(brandCode);
+        brandJpaRepository.deleteByCode(brandCode);
     }
 }
