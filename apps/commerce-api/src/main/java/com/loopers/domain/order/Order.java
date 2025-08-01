@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,24 +23,23 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Setter
 @Getter
+@Setter
 public class Order extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String orderNo;
 
-    @OneToMany(cascade = CascadeType.ALL)//연결된 객체와 같이 저장/삭제
-    @JoinColumn(name = "order_no")
-    private List<OrderDetail> orderDetailList;
+    private Long orderNo;  // String → Long 변경 (auto-generated용)
+
+    @OneToMany(mappedBy = "orderNo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderDetail> orderDetailList = new ArrayList<>();
 
     /**
-     * 주문번호의 총 금액
-     * @return
+     * 주문 총액 계산
      */
-    public BigDecimal totalAmount(){
-        return orderDetailList.stream().map(OrderDetail::price).reduce(BigDecimal.ZERO, BigDecimal::add);
+    public BigDecimal totalAmount() {
+        return orderDetailList.stream()
+            .map(od -> od.getUnitPrice().multiply(BigDecimal.valueOf(od.getQuantity())))
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
 }

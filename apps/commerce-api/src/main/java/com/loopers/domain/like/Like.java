@@ -23,19 +23,19 @@ public class Like extends BaseEntity {
     private String productId;
     private String userId;
     private Boolean likeYn;
+    private Long likesCount;
 
-    @Builder
-    public Like(String productId, String userId, Boolean likeYn) {
-        this.productId = productIdValid(productId);
+    public Like(String productId, String userId, Boolean likeYn, Long likesCount) {
+        this.productId = productId;
         this.userId = userId;
         this.likeYn = likeYn;
+        this.likesCount = likesCount;
     }
 
-    private String productIdValid(String productId){
-        if(StringUtils.isEmpty(productId)){
-            return StringUtil.generateCode(7);
-        }
-        return productId;
+    public Like(String productId, String userId, Boolean likeYn) {
+        this.productId = productId;
+        this.userId = userId;
+        this.likeYn = likeYn;
     }
 
 }

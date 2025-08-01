@@ -1,12 +1,8 @@
 package com.loopers.domain.like;
 
-import com.loopers.domain.brand.BrandService;
-import com.loopers.utils.DatabaseCleanUp;
-import org.junit.jupiter.api.AfterEach;
+
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class LikeTest {
 

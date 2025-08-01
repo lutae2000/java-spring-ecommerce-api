@@ -40,7 +40,7 @@ public class ProductInfo {
             product.getCategory2(),
             product.getCategory3(),
             product.isUseYn(),
-            product.getLike()
+            product.getLikes()
         );
     }
 }

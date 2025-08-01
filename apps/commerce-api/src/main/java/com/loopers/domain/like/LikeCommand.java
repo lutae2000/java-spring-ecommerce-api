@@ -16,12 +16,13 @@ public class LikeCommand {
         return new LikeInfo(
             like.getProductId(),
             like.getUserId(),
-            like.getLikeYn()
+            like.getLikeYn(),
+            like.getLikesCount()
         );
     }
-    public record Create(String userId, String productId, Boolean likeYn){
+    public record Create(String userId, String productId, Boolean likeYn, Long likesCount){
         public Like toEntity(){
-            return new Like(userId, productId, likeYn);
+            return new Like(userId, productId, likeYn, likesCount);
         }
     }
 }

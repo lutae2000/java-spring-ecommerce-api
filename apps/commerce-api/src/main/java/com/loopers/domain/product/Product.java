@@ -35,9 +35,9 @@ public class Product extends BaseEntity {
     private String category2;
     private String category3;
     private boolean useYn;
-    private Long like;
+    private Long likes;
 
-    public Product(String code, String name, BigDecimal price, int quantity, String imgURL, String description, String brandCode, String category1, String category2, String category3, boolean useYn, Long like) {
+    public Product(String code, String name, BigDecimal price, int quantity, String imgURL, String description, String brandCode, String category1, String category2, String category3, boolean useYn, Long likes) {
         this.code = code;
         this.name = name;
         this.price = price;
@@ -49,7 +49,7 @@ public class Product extends BaseEntity {
         this.category2 = category2;
         this.category3 = category3;
         this.useYn = useYn;
-        this.like = like;
+        this.likes = likes;
         validName(name);
         validPrice(price);
         validQuantity(quantity);

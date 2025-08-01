@@ -18,7 +18,7 @@ public class ProductCommand {
     private String category2;
     private String category3;
     private boolean useYn;
-    private Long like;
+    private Long likes;
 
     public static ProductInfo from(Product product){
         return new ProductInfo(
@@ -33,7 +33,7 @@ public class ProductCommand {
             product.getCategory3(),
             product.getDescription(),
             product.isUseYn(),
-            product.getLike()
+            product.getLikes()
         );
     }
 

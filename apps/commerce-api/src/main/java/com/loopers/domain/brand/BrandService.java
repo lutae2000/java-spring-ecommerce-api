@@ -20,7 +20,7 @@ public class BrandService {
      */
     public BrandInfo findByBrandCode(String brandCode){
         Brand brand = brandRepository.findByBrandCode(brandCode)
-            .orElseThrow(() -> new NoSuchElementException("브랜드가 존재하지 않습니다"));
+            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND,"브랜드가 존재하지 않습니다"));
 
         return BrandInfo.from(brand);
     }
@@ -29,6 +29,10 @@ public class BrandService {
      * Brand 생성(Upsert)
      */
     public BrandInfo createBrand(BrandCommand.Create command){
+        Optional<Brand> existsBrand = brandRepository.findByBrandCode(command.brandCode());
+        if(existsBrand.isPresent()){
+            throw new CoreException(ErrorType.CONFLICT, "이미 존재하는 브랜드 입니다");
+        }
         Brand brand = brandRepository.save(command.toEntity());
         return BrandInfo.from(brand);
     }
