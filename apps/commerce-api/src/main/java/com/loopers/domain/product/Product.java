@@ -26,10 +26,9 @@ public class Product extends BaseEntity {
     private String code;
     private String name;
     private BigDecimal price;
-    private int quantity;
+    private Long quantity;
     private String imgURL;
     private String description;
-    @Transient
     private String brandCode;
     private String category1;
     private String category2;
@@ -37,7 +36,9 @@ public class Product extends BaseEntity {
     private boolean useYn;
     private Long likes;
 
-    public Product(String code, String name, BigDecimal price, int quantity, String imgURL, String description, String brandCode, String category1, String category2, String category3, boolean useYn, Long likes) {
+    public Product(String code, String name, BigDecimal price, Long quantity, String imgURL,
+        String description, String brandCode, String category1, String category2, String category3, boolean useYn, Long likes
+    ) {
         this.code = code;
         this.name = name;
         this.price = price;
@@ -53,11 +54,18 @@ public class Product extends BaseEntity {
         validName(name);
         validPrice(price);
         validQuantity(quantity);
+        validCode(code);
+    }
+
+    private void validCode(String productCode){
+        if(StringUtils.isEmpty(productCode)){
+            throw new CoreException(ErrorType.BAD_REQUEST, "상품 코드는 필수값 입니다");
+        }
     }
 
     private void validName(String name){
         if(StringUtils.isEmpty(name)){
-            throw new CoreException(ErrorType.BAD_REQUEST, "상품 이름은 필수입니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, "상품 이름은 필수값 입니다");
         }
     }
 
@@ -71,7 +79,7 @@ public class Product extends BaseEntity {
         }
     }
 
-    private void validQuantity(int quantity){
+    private void validQuantity(Long quantity){
         if(price == null) {
             throw new CoreException(ErrorType.BAD_REQUEST, "상품의 수량은 필수입니다");
         }

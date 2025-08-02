@@ -1,7 +1,7 @@
 package com.loopers.infrastructure.product;
 
-import com.loopers.domain.BaseEntity;
 import com.loopers.domain.product.Product;
+import com.loopers.domain.product.ProductInfo;
 import com.loopers.domain.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -18,11 +18,12 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     @Override
     public void deleteProduct(String productId) {
-
+//        productJPARepository.delete(productId);
     }
 
     @Override
     public Product save(Product product) {
-        return null;
+        Product savedProduct = productJPARepository.save(product);
+        return savedProduct;
     }
 }

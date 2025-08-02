@@ -12,20 +12,18 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ProductInfo {
 
-
     private String code;
     private String name;
     private BigDecimal price;
-    private int quantity;
+    private Long quantity;
     private String imgURL;
     private String description;
-    @Transient
-    private String brand;
+    private String brandCode;
     private String category1;
     private String category2;
     private String category3;
     private boolean useYn;
-    private Long like;
+    private Long likes;
 
     public static ProductInfo from(Product product){
         return new ProductInfo(

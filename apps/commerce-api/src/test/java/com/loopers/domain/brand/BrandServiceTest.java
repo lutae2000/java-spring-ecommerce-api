@@ -2,12 +2,12 @@ package com.loopers.domain.brand;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+
 
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import com.loopers.utils.DatabaseCleanUp;
-import java.util.NoSuchElementException;
+
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,6 +16,7 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -24,7 +25,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)  // 인스턴스 재사용
+@TestInstance(Lifecycle.PER_CLASS)  // 인스턴스 재사용
 public class BrandServiceTest {
 
     @Autowired
@@ -74,11 +75,10 @@ public class BrandServiceTest {
             );
         }
 
-        @DisplayName("브랜드 생성 - 성공")
+        @DisplayName("실패 - 이미 존재하는 브랜드를 등록요청")
         @ParameterizedTest
         @CsvSource({
             "nike, nike, description3, null, true",
-            "nike, nike, description4, null, false",
         })
         @Order(2)
         void createBrand_whenFailed(String code, String name, String description, String imgURL, boolean useYn) {

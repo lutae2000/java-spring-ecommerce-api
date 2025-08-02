@@ -27,7 +27,6 @@ import lombok.Setter;
 @Setter
 public class Order extends BaseEntity {
 
-
     private Long orderNo;  // String → Long 변경 (auto-generated용)
 
     @OneToMany(mappedBy = "orderNo", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -44,7 +44,7 @@ public class LikeServiceTest {
     @DisplayName("좋아요 생성")
     class Create {
 
-        @DisplayName("성공")
+        @DisplayName("여러 상품에 대해 좋아요 성공")
         @ParameterizedTest
         @CsvSource({
             "utlee, pants",

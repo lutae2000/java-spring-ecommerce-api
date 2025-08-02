@@ -43,4 +43,10 @@ public class ProductCommand {
             return new Brand(code, name, description, imgURL, useYn);
         }
     }
+
+    public record Search(
+        SortBy sortBy,
+        int page,
+        int size
+    ){}
 }
