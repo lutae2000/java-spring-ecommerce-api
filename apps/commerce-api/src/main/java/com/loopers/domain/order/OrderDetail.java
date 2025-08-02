@@ -53,8 +53,8 @@ public class OrderDetail extends BaseEntity {
      * 수량 체크
      */
     public void validQuantity(){
-        if(unitPrice.compareTo(BigDecimal.ZERO) < 0){  //수량 체크(수량은 반드시 1이상)
-            throw new CoreException(ErrorType.BAD_REQUEST, "잘못된 주문수량 입니다");
+        if(quantity.compareTo(0L) <= 0){  //수량 체크(수량은 반드시 1이상)
+            throw new CoreException(ErrorType.BAD_REQUEST, "주문수량은 1개 이상이어야 합니다");
         }
     }
 }

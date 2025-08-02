@@ -26,4 +26,12 @@ public class ProductRepositoryImpl implements ProductRepository {
         Product savedProduct = productJPARepository.save(product);
         return savedProduct;
     }
+
+    @Override
+    public void orderProduct(String productId, Long quantity) {
+
+        Product product = productJPARepository.findProductByCode(productId);
+        product.setQuantity(product.getQuantity() - quantity);
+        productJPARepository.save(product);
+    }
 }

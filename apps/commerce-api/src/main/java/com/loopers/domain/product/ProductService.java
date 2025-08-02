@@ -40,4 +40,16 @@ public class ProductService {
         }
         productRepository.deleteProduct(productId);
     }
+
+    public void orderedStock(String productId, Long quantity){
+        ProductInfo productInfo = findProduct(productId);
+
+        if(ObjectUtils.isEmpty(productInfo)){
+            throw new CoreException(ErrorType.NOT_FOUND, "주문하려는 물품코드가 없습니다");
+        }
+        if(productInfo.getQuantity() < quantity){
+            throw new CoreException(ErrorType.NOT_FOUND, "재고가 부족합니다");
+        }
+        productRepository.orderProduct(productId, quantity);
+    }
 }

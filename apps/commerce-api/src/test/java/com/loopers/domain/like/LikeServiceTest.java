@@ -79,7 +79,7 @@ public class LikeServiceTest {
             "unicorn, AOC"
         })
         void CreateLike(String loginId, String code) {
-            LikeInfo likeInfo = likeService.unlike(loginId, code);
+            LikeInfo likeInfo = likeService.likeCancel(loginId, code);
 
             assertThat(likeInfo.getLikesCount()).isNotNull();
         }

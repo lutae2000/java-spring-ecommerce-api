@@ -23,5 +23,4 @@ public class ProductFacade {
         BrandInfo brandInfo = brandService.findByBrandCode(productInfo.getBrandCode());
         return ProductResult.of(productInfo, brandInfo, likeCount);
     }
-
 }

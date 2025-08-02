@@ -42,7 +42,7 @@ public class LikeService {
     /**
      * like 취소
      */
-    public LikeInfo unlike(String userId, String productId){
+    public LikeInfo likeCancel(String userId, String productId){
         likeRepository.deleteByProductIdAndUserId(userId, productId);
 
         Long likeCount = likeRepository.countByProductId(productId);
