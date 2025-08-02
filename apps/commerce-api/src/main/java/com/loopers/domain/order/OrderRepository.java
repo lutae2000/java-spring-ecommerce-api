@@ -1,5 +1,8 @@
 package com.loopers.domain.order;
 
+import com.loopers.domain.BaseEntity;
+import java.util.Optional;
+
 public interface OrderRepository {
 
     /**
@@ -7,5 +10,10 @@ public interface OrderRepository {
      * @param order
      * @return
      */
-     Order registerOrder(Order order);
+     Order save(Order order);
+
+    /**
+     * 주문서 조회
+     */
+    Optional<Order> findByOrderNo(String orderNo);
 }

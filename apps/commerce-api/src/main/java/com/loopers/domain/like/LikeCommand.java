@@ -1,9 +1,5 @@
 package com.loopers.domain.like;
 
-import com.loopers.domain.product.Product;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 
 
 public class LikeCommand {

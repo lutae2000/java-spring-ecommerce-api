@@ -1,32 +1,27 @@
 package com.loopers.domain.order;
 
+import com.loopers.domain.BaseEntity;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "order_details")
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class OrderDetail {
+public class OrderDetail extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "order_id")
-    private Order orderNo;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_no")
+    private Order order;
 
     private String productId;
 
@@ -34,16 +29,13 @@ public class OrderDetail {
 
     private BigDecimal unitPrice;
 
-    public OrderDetail(Long id, Order orderNo, String productId, Long quantity, BigDecimal unitPrice) {
-        this.id = id;
-        this.orderNo = orderNo;
+    public OrderDetail(String productId, Long quantity, BigDecimal unitPrice) {
         this.productId = productId;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
         validUnitPrice();
         validQuantity();
     }
-
 
 
     /**
@@ -61,7 +53,7 @@ public class OrderDetail {
      * 수량 체크
      */
     public void validQuantity(){
-        if(unitPrice.compareTo(BigDecimal.ZERO) <= 0){  //수량 체크(수량은 반드시 1이상)
+        if(unitPrice.compareTo(BigDecimal.ZERO) < 0){  //수량 체크(수량은 반드시 1이상)
             throw new CoreException(ErrorType.BAD_REQUEST, "잘못된 주문수량 입니다");
         }
     }
