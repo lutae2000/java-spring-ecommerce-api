@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ProductJPARepository extends JpaRepository<Product, Long> {
 
     Product findProductByCode(String productId);
+
+    Product save(Product product);
 }

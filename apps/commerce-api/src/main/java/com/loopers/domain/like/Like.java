@@ -1,6 +1,8 @@
 package com.loopers.domain.like;
 
 import com.loopers.domain.BaseEntity;
+import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorType;
 import com.loopers.support.utils.StringUtil;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,6 +13,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
 @Entity
@@ -29,13 +33,36 @@ public class Like extends BaseEntity {
         this.productId = productId;
         this.userId = userId;
         this.likeYn = likeYn;
-        this.likesCount = likesCount;
+        this.likesCount = ObjectUtils.isEmpty(likesCount) ? 0L : likesCount;
+        validLikeYn(likeYn);
+        validProductId(productId);
+        validUserId(userId);
     }
 
     public Like(String productId, String userId, Boolean likeYn) {
         this.productId = productId;
         this.userId = userId;
         this.likeYn = likeYn;
+        validLikeYn(likeYn);
+        validProductId(productId);
+        validUserId(userId);
     }
 
+    public void validProductId(String productId){
+        if(StringUtils.isEmpty(productId)){
+            throw new CoreException(ErrorType.BAD_REQUEST, "물품 코드는 필수값 입니다");
+        }
+    }
+
+    public void validUserId(String userId){
+        if(StringUtils.isEmpty(userId)){
+            throw new CoreException(ErrorType.BAD_REQUEST, "회원ID는 필수값 입니다");
+        }
+    }
+
+    public void validLikeYn(Boolean likeYn){
+        if(ObjectUtils.isEmpty(likeYn)){
+            throw new CoreException(ErrorType.BAD_REQUEST, "좋아요 플래그는 필수값 입니다");
+        }
+    }
 }

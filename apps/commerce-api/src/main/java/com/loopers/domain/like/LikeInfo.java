@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.ObjectUtils;
 
 @Getter
 @Setter
@@ -23,7 +24,7 @@ public class LikeInfo {
             like.getProductId(),
             like.getUserId(),
             like.getLikeYn(),
-            like.getLikesCount()
+            ObjectUtils.isEmpty(like.getLikesCount()) ? 0: like.getLikesCount()
         );
     }
 
