@@ -24,8 +24,8 @@ import org.apache.commons.lang3.StringUtils;
 @Entity
 public class User extends BaseEntity {
 
-    @Column(name = "login_id", nullable = false, unique = true)
-    private String loginId;
+    @Column(name = "userId", nullable = false, unique = true)
+    private String userId;
 
     private String email;
 
@@ -36,23 +36,23 @@ public class User extends BaseEntity {
     private Gender gender;
 
     @Builder
-    public User(String loginId, String email, String birthday, Gender gender) {
-        loginIdValid(loginId);
+    public User(String userId, String email, String birthday, Gender gender) {
+        userIdValid(userId);
         emailValid(email);
         birthdayValid(birthday);
         genderValid(gender);
-        this.loginId = loginId;
+        this.userId = userId;
         this.email = email;
         this.birthday = birthday;
         this.gender = gender;
     }
 
-    private void loginIdValid(String loginId){
-        if(StringUtils.isEmpty(loginId)){
-            throw new CoreException(ErrorType.BAD_REQUEST, "loginId 값은 필수입니다");
+    private void userIdValid(String userId){
+        if(StringUtils.isEmpty(userId)){
+            throw new CoreException(ErrorType.BAD_REQUEST, "userId 값은 필수입니다");
         }
-        if(!loginId.matches("^[a-zA-Z0-9]{1,10}$")){
-            throw new CoreException(ErrorType.BAD_REQUEST, "loginId는 영문 대/소문자와 숫자만 가능하며 10자 이내만 가능합니다");
+        if(!userId.matches("^[a-zA-Z0-9]{1,10}$")){
+            throw new CoreException(ErrorType.BAD_REQUEST, "userId는 영문 대/소문자와 숫자만 가능하며 10자 이내만 가능합니다");
         }
     }
 

@@ -59,11 +59,11 @@ public class PointServiceTest {
             //when
             UserInfo user = userService.createUserId(command);
 
-            PointInfo pointInfo =  pointService.getPointInfo(user.getLoginId());
+            PointInfo pointInfo =  pointService.getPointInfo(user.getUserId());
 
             //then
             assertAll(
-                () -> assertThat(pointInfo.getLoginId()).isEqualTo("utlee"),
+                () -> assertThat(pointInfo.getUserId()).isEqualTo("utlee"),
                 () -> assertThat(pointInfo.getPoint()).isNotNull()
             );
         }
@@ -110,7 +110,7 @@ public class PointServiceTest {
 
             //then
             assertAll(
-                () -> assertThat(pointInfo.getLoginId()).isEqualTo("utlee"),
+                () -> assertThat(pointInfo.getUserId()).isEqualTo("utlee"),
                 () -> assertThat(pointInfo.getPoint()).isNotNull()
             );
 

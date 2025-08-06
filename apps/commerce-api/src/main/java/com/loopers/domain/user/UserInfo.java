@@ -15,7 +15,7 @@ import lombok.Setter;
 public class UserInfo {
 
     private Long id;
-    private String loginId;
+    private String userId;
     private String email;
     private String birthday;
     private Gender gender;
@@ -23,7 +23,7 @@ public class UserInfo {
     public static UserInfo from(User user) {
         return UserInfo.builder()
             .id(user.getId())
-            .loginId(user.getLoginId())
+            .userId(user.getUserId())
             .email(user.getEmail())
             .birthday(user.getBirthday())
             .gender(user.getGender())

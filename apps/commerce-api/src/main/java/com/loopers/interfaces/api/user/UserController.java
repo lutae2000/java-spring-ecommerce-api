@@ -55,7 +55,7 @@ public class UserController {
 
         log.debug("::: Creating user with login Object ::: {}", user);
 
-        UserCommand.Create command = new UserCommand.Create(user.getLoginId(), user.getEmail(), user.getBirthday(), user.getGender());
+        UserCommand.Create command = new UserCommand.Create(user.getUserId(), user.getEmail(), user.getBirthday(), user.getGender());
 
         UserInfo userInfo = userService.createUserId(command);
         return ApiResponse.success(UserDto.Response.from(userInfo));

@@ -71,7 +71,7 @@ public class PointV1ApiE2ETest {
                 .birthday(birthday)
                 .email(email)
                 .gender(Gender.M)
-                .loginId(loginId)
+                .userId(loginId)
                 .build();
 
             ResponseEntity<ApiResponse<UserDto.Response>> response = testRestTemplate.exchange(
@@ -110,7 +110,7 @@ public class PointV1ApiE2ETest {
                 .birthday(birthday)
                 .email(email)
                 .gender(Gender.M)
-                .loginId(loginId)
+                .userId(loginId)
                 .build();
 
             ResponseEntity<ApiResponse<UserDto.Response>> response = testRestTemplate.exchange(
@@ -171,7 +171,7 @@ public class PointV1ApiE2ETest {
                 .birthday(birthday)
                 .email(email)
                 .gender(Gender.M)
-                .loginId(loginId)
+                .userId(loginId)
                 .build();
 
             ResponseEntity<ApiResponse<UserDto.Response>> response = testRestTemplate.exchange(
@@ -217,7 +217,7 @@ public class PointV1ApiE2ETest {
                 .birthday(birthday)
                 .email(email)
                 .gender(Gender.M)
-                .loginId(loginId)
+                .userId(loginId)
                 .build();
 
             ResponseEntity<ApiResponse<UserDto.Response>> response = testRestTemplate.exchange(
@@ -252,7 +252,7 @@ public class PointV1ApiE2ETest {
                 .birthday(birthday)
                 .email(email)
                 .gender(Gender.M)
-                .loginId(loginId)
+                .userId(loginId)
                 .build();
 
             ResponseEntity<ApiResponse<UserDto.Response>> response = testRestTemplate.exchange(
@@ -287,7 +287,7 @@ public class PointV1ApiE2ETest {
                 .birthday(birthday)
                 .email(email)
                 .gender(Gender.M)
-                .loginId(loginId)
+                .userId(loginId)
                 .build();
 
             ResponseEntity<ApiResponse<UserDto.Response>> response = testRestTemplate.exchange(

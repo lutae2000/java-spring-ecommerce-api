@@ -60,7 +60,7 @@ public class UserV1ApiE2ETest {
                 .birthday(birthday)
                 .email(email)
                 .gender(Gender.valueOf(gender))
-                .loginId(loginId)
+                .userId(loginId)
                 .build();
 
             String requestURL =  ENDPOINT_SIGNUP;
@@ -88,7 +88,7 @@ public class UserV1ApiE2ETest {
                 .birthday(birthday)
                 .email(email)
                 .gender(Gender.valueOf(gender))
-                .loginId(loginId)
+                .userId(loginId)
                 .build();
 
             //최초 생성
@@ -103,7 +103,7 @@ public class UserV1ApiE2ETest {
                 .birthday(birthday)
                 .email(email)
                 .gender(Gender.valueOf(gender))
-                .loginId(loginId)
+                .userId(loginId)
                 .build();
 
             ResponseEntity<ApiResponse<UserDto.Response>> response2 = testRestTemplate.exchange(
@@ -128,7 +128,7 @@ public class UserV1ApiE2ETest {
                 .birthday(birthday)
                 .email(email)
                 .gender(Gender.valueOf(gender))
-                .loginId(loginId)
+                .userId(loginId)
                 .build();
 
             //최초 생성
@@ -153,7 +153,7 @@ public class UserV1ApiE2ETest {
                 .birthday(birthday)
                 .email(email)
                 .gender(null)
-                .loginId(loginId)
+                .userId(loginId)
                 .build();
 
             //최초 생성
@@ -189,7 +189,7 @@ public class UserV1ApiE2ETest {
                 .birthday(birthday)
                 .email(email)
                 .gender(Gender.valueOf(gender))
-                .loginId(loginId)
+                .userId(loginId)
                 .build();
 
             //최초 생성

@@ -13,7 +13,7 @@ public class UserCommand {
 
         public User toUserEntity() {
             return User.builder()
-                .loginId(this.loginId)
+                .userId(this.loginId)
                 .email(this.email)
                 .birthday(this.birthday)
                 .gender(this.gender)

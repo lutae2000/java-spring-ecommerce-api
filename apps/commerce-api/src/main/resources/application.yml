@@ -11,6 +11,10 @@ server:
   max-http-request-header-size: 8KB
 
 spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
   main:
     web-application-type: servlet
   application:

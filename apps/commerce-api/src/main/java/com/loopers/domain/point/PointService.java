@@ -31,7 +31,7 @@ public class PointService {
 
         log.debug("::: chargePoint ::: command: {}", command);
 
-        User user = userRepository.selectUserByLoginId(command.loginId())
+        User user = userRepository.selectUserByUserId(command.userId())
             .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "존재하지 않는 회원입니다"));
 
         if(command.point() <= 0){
@@ -39,12 +39,12 @@ public class PointService {
         }
 
         Long totalPoint = 0L;
-        PointEntity pointEntity = pointRepository.findByLoginId(user.getLoginId()).orElse(null);
+        PointEntity pointEntity = pointRepository.findByUserId(user.getUserId()).orElse(null);
 
         if(ObjectUtils.isEmpty(pointEntity)) {  //값이 없으면 회원가입 후 최초 포인트 적립
             totalPoint = command.point();
             pointEntity = PointEntity.builder()
-                .loginId(user.getLoginId())
+                .userId(user.getUserId())
                 .point(totalPoint)
                 .build();
         } else {    //조회해온 포인트 최종값 + 충전할 포인트
@@ -55,7 +55,7 @@ public class PointService {
         pointRepository.save(pointEntity);
 
         return PointInfo.builder()
-            .loginId(pointEntity.getLoginId())
+            .userId(pointEntity.getUserId())
             .point(pointEntity.getPoint())
             .build();
     }
@@ -63,17 +63,17 @@ public class PointService {
 
     public PointInfo getPointInfo(String loginId) {
 
-        Optional<User> user = userRepository.selectUserByLoginId(loginId);
+        Optional<User> user = userRepository.selectUserByUserId(loginId);
 
         if(ObjectUtils.isEmpty(user)){
             throw new CoreException(ErrorType.NOT_FOUND, "존재하지 않는 회원입니다");
         }
 
-        PointEntity pointEntity = pointRepository.findByLoginId(user.get().getLoginId()).orElse(null);
+        PointEntity pointEntity = pointRepository.findByUserId(user.get().getUserId()).orElse(null);
 
 
         PointInfo pointInfo = PointInfo.builder()
-            .loginId(user.get().getLoginId())
+            .userId(user.get().getUserId())
             .point(ObjectUtils.isEmpty(pointEntity) ? 0L : pointEntity.getPoint())
             .build();
 

@@ -27,7 +27,7 @@ public class PointTest {
         PointEntity pointModel = new PointEntity(loginId, pointValue);
 
         //then
-        assert pointModel.getLoginId().equals(loginId);
+        assert pointModel.getUserId().equals(loginId);
         assert pointModel.getPoint().equals(pointValue);
     }
 
