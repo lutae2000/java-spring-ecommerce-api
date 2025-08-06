@@ -1,5 +1,6 @@
 package com.loopers.domain.like;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -15,6 +16,7 @@ public class LikeService {
     /**
      * like 추가
      */
+    @Transactional
     public LikeInfo like(String userId, String productId){
 
         try{
@@ -42,6 +44,7 @@ public class LikeService {
     /**
      * like 취소
      */
+    @Transactional
     public LikeInfo likeCancel(String userId, String productId){
         likeRepository.deleteByProductIdAndUserId(userId, productId);
 

@@ -9,12 +9,16 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
+@TestInstance(Lifecycle.PER_CLASS)
 public class LikeServiceTest {
 
     @Autowired
@@ -70,7 +74,8 @@ public class LikeServiceTest {
     @Nested
     @DisplayName("좋아요 취소")
     class Cancel {
-        @DisplayName("성공")
+
+        @DisplayName("좋아요가 없는 상태에서 취소 성공")
         @ParameterizedTest
         @CsvSource({
             "utlee, pants",
@@ -81,8 +86,24 @@ public class LikeServiceTest {
         void CreateLike(String loginId, String code) {
             LikeInfo likeInfo = likeService.likeCancel(loginId, code);
 
-            assertThat(likeInfo.getLikesCount()).isNotNull();
+            assertThat(likeInfo.getLikesCount()).isEqualTo(0);
         }
+    }
+
+    @DisplayName("좋아요 후 총 카운트")
+    @Test
+    void CreateLikeAndCancel() {
+
+        likeService.like("utlee", "pasta");
+        likeService.like("utlee", "phone");
+        likeService.like("unicorn", "pasta");
+        likeService.like("AOC", "coke");
+        likeService.like("park", "phone");
+        likeService.like("anonymous", "phone");
+        likeService.likeCancel("anonymous", "phone");   //anonymous 유저가 취소
+        likeService.likeCancel("anonymous", "phone");   //멱등 + anonymous 유저가 취소
+
+        assertThat(likeService.countLike("phone")).isEqualTo(2);
     }
 
 }
