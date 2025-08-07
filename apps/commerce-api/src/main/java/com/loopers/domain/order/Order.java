@@ -38,6 +38,8 @@ public class Order extends BaseEntity {
 
     private BigDecimal totalAmount;
 
+    private
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderDetail> orderDetailList = new ArrayList<>();
 
