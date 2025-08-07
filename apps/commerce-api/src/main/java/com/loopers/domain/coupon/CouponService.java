@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,14 +27,18 @@ public class CouponService {
      * @param coupon
      * @return
      */
-    public Coupon updateCouponUseYn(CouponCommand coupon){
-        Optional<List<Coupon>> couponList = couponRepository.findCouponsByUserId(coupon.getUserId());
+    @Transactional
+    public void updateCouponUseYn(CouponCommand couponCommand){
+        Optional<List<Coupon>> couponList = couponRepository.findCouponsByUserId(couponCommand.getUserId());
         if(couponList.isPresent()){
-            if(couponList.stream().allMatch(coupons -> coupons.contains(coupon.getCouponCode()))){
-                return couponRepository.updateCouponUseYn(coupon.getCouponCode());
+            List<Coupon> couponsResult = couponList.get();
+
+            if(couponsResult.stream().anyMatch(coupons -> coupons.getCouponNo().equals(couponCommand.getCouponNo()))){
+                couponRepository.updateCouponUseYn(couponCommand);
+            }else {
+                throw new CoreException(ErrorType.BAD_REQUEST, "이미 사용된 쿠폰이거나 사용할 수 없는 쿠폰입니다");
             }
         }
-        throw new CoreException(ErrorType.BAD_REQUEST, "이미 사용된 쿠폰이거나 사용할 수 없는 쿠폰입니다");
     }
 
     /**

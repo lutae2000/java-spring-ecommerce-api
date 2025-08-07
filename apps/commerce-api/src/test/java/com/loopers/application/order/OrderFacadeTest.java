@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import com.loopers.application.like.LikeFacade;
+import com.loopers.domain.coupon.Coupon;
+import com.loopers.domain.coupon.CouponService;
+import com.loopers.domain.domainEnum.DiscountType;
 import com.loopers.domain.domainEnum.Gender;
 import com.loopers.domain.order.OrderDetail;
 import com.loopers.domain.order.OrderDetailCommand;
@@ -44,6 +47,9 @@ public class OrderFacadeTest {
 
     @Autowired
     private PointService pointService;
+
+    @Autowired
+    private CouponService couponService;
 
     @Autowired
     DatabaseCleanUp databaseCleanUp;
@@ -88,32 +94,69 @@ public class OrderFacadeTest {
             .useYn(true)
             .build();
         productService.createProduct(product2);
+
+        Coupon coupon = Coupon.builder()
+            .eventId("ABC")
+            .couponNo("1234")
+            .userId("utlee")
+            .couponName("테스트 쿠폰 입니다")
+            .useYn(false)
+            .discountType(DiscountType.RATIO_DISCOUNT)
+            .discountRate(BigDecimal.valueOf(0.1))
+            .discountRateLimitPrice(BigDecimal.valueOf(10000))
+            .build();
+
+        couponService.save(coupon);
     }
 
     @Nested
     @DisplayName("정상")
     class placeOrder {
 
+        List<OrderDetailCommand.orderItem> items = List.of(
+            new orderItem("A0001", 2L, BigDecimal.valueOf(1000)),
+            new orderItem("A0002", 1L, BigDecimal.valueOf(2000))
+        );
+
         @DisplayName("주문 정상")
         @Test
         void order_when_valid_succeed(){
 
             //given
-            List<OrderDetailCommand.orderItem> items = List.of(
-                new orderItem("A0001", 2L, BigDecimal.valueOf(1000)),
-                new orderItem("A0002", 1L, BigDecimal.valueOf(2000))
-            );
+
 
             String userId = "utlee";
             BigDecimal totalAmount = BigDecimal.valueOf(4000);
 
             //when
-            OrderResult orderResult = orderFacade.orderSubmit(userId, totalAmount, items);
+            OrderResult orderResult = orderFacade.orderSubmit(userId,null ,totalAmount, items);
 
             //then
             assertAll(
                 () -> assertThat(orderResult.orderInfo().getOrder().getOrderNo()).isNotNull()
             );
+
+
+        }
+
+        @DisplayName("주문 정상")
+        @Test
+        void order_when_valid_succeed_with_coupon(){
+
+
+            String userId = "utlee";
+            BigDecimal totalAmount = BigDecimal.valueOf(4000);
+            String couponNo = "1234";
+
+            //when
+            OrderResult orderResult = orderFacade.orderSubmit(userId,couponNo ,totalAmount, items);
+
+            //then
+            assertAll(
+                () -> assertThat(orderResult.orderInfo().getOrder().getOrderNo()).isNotNull()
+            );
+
+
         }
 
 
@@ -138,7 +181,7 @@ public class OrderFacadeTest {
 
             //when
             CoreException result = Assert.assertThrows(CoreException.class, () -> {
-                OrderResult orderResult = orderFacade.orderSubmit(userId, totalAmount, items);
+                OrderResult orderResult = orderFacade.orderSubmit(userId, null, totalAmount, items);
 
             });
 
@@ -162,7 +205,7 @@ public class OrderFacadeTest {
 
             //when
             CoreException result = Assert.assertThrows(CoreException.class, () -> {
-                OrderResult orderResult = orderFacade.orderSubmit(userId, totalAmount, items);
+                OrderResult orderResult = orderFacade.orderSubmit(userId, null, totalAmount, items);
 
             });
 
@@ -186,7 +229,7 @@ public class OrderFacadeTest {
 
             //when
             CoreException result = Assert.assertThrows(CoreException.class, () -> {
-                OrderResult orderResult = orderFacade.orderSubmit(userId, totalAmount, items);
+                OrderResult orderResult = orderFacade.orderSubmit(userId, null, totalAmount, items);
 
             });
 
@@ -195,7 +238,7 @@ public class OrderFacadeTest {
             assertThat(result.getMessage()).isEqualTo("검색하려는 물품이 없습니다");
         }
 
-        @DisplayName("주문 수량 이상 - 400에러")
+        @DisplayName("재고 수량 이상으로 주문  - 400에러")
         @Test
         void order_failed_invalid_items_quantity(){
 
@@ -210,7 +253,7 @@ public class OrderFacadeTest {
 
             //when
             CoreException result = Assert.assertThrows(CoreException.class, () -> {
-                OrderResult orderResult = orderFacade.orderSubmit(userId, totalAmount, items);
+                OrderResult orderResult = orderFacade.orderSubmit(userId, null, totalAmount, items);
 
             });
 
@@ -234,7 +277,7 @@ public class OrderFacadeTest {
 
             //when
             CoreException result = Assert.assertThrows(CoreException.class, () -> {
-                OrderResult orderResult = orderFacade.orderSubmit(userId, totalAmount, items);
+                OrderResult orderResult = orderFacade.orderSubmit(userId, null, totalAmount, items);
 
             });
 

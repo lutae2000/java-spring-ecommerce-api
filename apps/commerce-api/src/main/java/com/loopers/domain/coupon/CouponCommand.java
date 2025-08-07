@@ -12,7 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class CouponCommand {
 
-    private String couponCode;
+    private String couponNo;
     private String userId;
 
 }

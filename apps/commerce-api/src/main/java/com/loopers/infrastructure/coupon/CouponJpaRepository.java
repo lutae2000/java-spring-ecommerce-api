@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface CouponJpaRepository extends JpaRepository<Coupon, Long> {
 
@@ -15,7 +16,7 @@ public interface CouponJpaRepository extends JpaRepository<Coupon, Long> {
      * @param couponCode
      * @return
      */
-    @Query("select c from Coupon c where c.userId = :userId and c.useYn = 'N'")
+    @Query("select c from Coupon c where c.userId = :userId and c.useYn = false ")
     Optional<List<Coupon>> findCouponsByUserId(String userId);
 
     /**
@@ -23,14 +24,9 @@ public interface CouponJpaRepository extends JpaRepository<Coupon, Long> {
      * @param coupon
      * @return
      */
+    @Query("update Coupon c set c.useYn = true where c.couponNo = :couponNo and c.userId = :userId")
     @Modifying
-    @Query("update Coupon c set c.useYn = 'Y' where c.couponNo = :couponNo and c.userId = :userId")
-    Coupon updateCouponUseYn(CouponCommand coupon);
+    void updateCouponUseYn(@Param("userId") String userId, @Param("couponNo") String couponNo);
 
-    /**
-     * 쿠폰 저장
-     * @param coupon
-     * @return
-     */
-    Coupon save(Coupon coupon);
+
 }

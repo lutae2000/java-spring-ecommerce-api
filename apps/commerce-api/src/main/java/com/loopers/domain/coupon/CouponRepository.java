@@ -18,7 +18,7 @@ public interface CouponRepository {
      * @param coupon
      * @return
      */
-    Coupon updateCouponUseYn(CouponCommand coupon);
+    void updateCouponUseYn(CouponCommand coupon);
 
     /**
      * 쿠폰 상태 변경

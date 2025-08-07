@@ -20,7 +20,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
 
     @Transactional
-    public OrderInfo placeOrder(String userId, BigDecimal totalAmount, List<orderItem> orderItems){
+    public OrderInfo placeOrder(String userId, BigDecimal totalAmount, List<orderItem> orderItems, BigDecimal discountPrice){
         String orderNo = StringUtil.generateCode(7);
         List<OrderDetail> details = orderItems.stream()
             .map(item -> new OrderDetail(item.productId(), item.quantity(), item.unitPrice()))

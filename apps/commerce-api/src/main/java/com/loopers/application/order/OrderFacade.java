@@ -1,8 +1,8 @@
 package com.loopers.application.order;
 
 import com.loopers.domain.coupon.Coupon;
+import com.loopers.domain.coupon.CouponCommand;
 import com.loopers.domain.coupon.CouponService;
-import com.loopers.domain.domainEnum.DiscountType;
 import com.loopers.domain.order.OrderDetailCommand.orderItem;
 import com.loopers.domain.order.OrderInfo;
 import com.loopers.domain.order.OrderService;
@@ -35,8 +35,7 @@ public class OrderFacade {
 
     @Transactional
     public OrderResult orderSubmit(String userId, String couponNo, BigDecimal totalAmount, List<orderItem> orderItems){
-
-        BigDecimal payAmount = totalAmount;
+        BigDecimal discountPrice = BigDecimal.ZERO;
 
         //회원 유효성 검증
         UserInfo userInfo = userService.getUserInfo(userId);
@@ -45,7 +44,7 @@ public class OrderFacade {
         }
 
         //쿠폰 적용가능 여부 조회
-        if(!StringUtils.isEmpty(couponNo)){
+        if(StringUtils.isNotEmpty(couponNo)){
             Optional<List<Coupon>> couponList = couponService.getCoupons(userId);
 
             log.debug("::: couponNoList ::: {} : ", couponList.isPresent());
@@ -54,22 +53,27 @@ public class OrderFacade {
             Optional<List<Coupon>> checkedCoupon = couponList.stream()
                         .filter(coupon -> coupon.contains(couponNo))
                         .findFirst();
+
+            CouponCommand couponCommand = CouponCommand.builder()
+                .couponNo(couponNo)
+                .userId(userId)
+                .build();
+
             // 사용처리
-            couponService.updateCouponUseYn(checkedCoupon.get().get(0));
+            couponService.updateCouponUseYn(couponCommand);
 
-
-            payAmount = checkedCoupon.get().get(0).calculateDiscount(totalAmount);
+//            discountPrice = checkedCoupon.get().get(0).calculateDiscount(totalAmount);
         }
 
         //포인트 잔액 조회
         PointInfo pointInfo = pointService.getPointInfo(userInfo.getUserId());
         log.debug("::: pointInfo ::: {}", pointInfo);
 
-        if(pointInfo.getPoint() < totalAmount.subtract(payAmount).intValue()){
+        if(pointInfo.getPoint() < totalAmount.subtract(discountPrice).intValue()){
             throw new CoreException(ErrorType.BAD_REQUEST, "가지고 있는 잔액이 부족합니다");
         }
 
-        OrderInfo orderInfo = orderService.placeOrder(userId, totalAmount.subtract(payAmount), orderItems);
+        OrderInfo orderInfo = orderService.placeOrder(userId, totalAmount, orderItems, null);
 
         for(orderItem item : orderItems){   //재고 차감
             productService.orderedStock(item.productId(), item.quantity());
