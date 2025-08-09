@@ -15,9 +15,8 @@ public class LikeTest {
     @Test
     void likeCreateSucceed(){
 
-        Like like = new Like("aaa", "utlee", true);
+        Like like = new Like("aaa", "utlee");
 
-        assert like.getLikeYn().equals(true);
         assert like.getProductId().equals("aaa");
         assert like.getUserId().equals("utlee");
     }
@@ -26,7 +25,7 @@ public class LikeTest {
     @Test
     void likeCreateFail_whenUserIdIsNull(){
         CoreException response = assertThrows(CoreException.class, () -> {
-            Like like = new Like("aaa", null, true);
+            Like like = new Like("aaa", null);
         });
         assertThat(response.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
         assertThat(response.getMessage()).isEqualTo("회원ID는 필수값 입니다");
@@ -36,7 +35,7 @@ public class LikeTest {
     @Test
     void likeCreateFail_whenProductIdIsNull(){
         CoreException response = assertThrows(CoreException.class, () -> {
-            Like like = new Like(null, "utlee", true);
+            Like like = new Like(null, "utlee");
         });
         assertThat(response.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
         assertThat(response.getMessage()).isEqualTo("물품 코드는 필수값 입니다");
@@ -46,7 +45,7 @@ public class LikeTest {
     @Test
     void likeCreateFail_when_like_flag_dIsNull(){
         CoreException response = assertThrows(CoreException.class, () -> {
-            Like like = new Like("A0001", "utlee", null);
+            Like like = new Like("A0001", "utlee");
         });
         assertThat(response.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
         assertThat(response.getMessage()).isEqualTo("좋아요 플래그는 필수값 입니다");

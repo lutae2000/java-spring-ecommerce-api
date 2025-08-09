@@ -6,7 +6,7 @@ public record CouponCriteria (
     String userId,
     String couponNo
 ){
-    public static CouponCriteria of(String userId, String couponNo) {
-        return new CouponCommand(String userId, String couponNo);
+    public CouponCommand toCommand(String userId, String couponNo) {
+        return new CouponCommand(userId, couponNo);
     }
 }

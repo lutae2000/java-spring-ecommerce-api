@@ -1,8 +1,6 @@
 package com.loopers.application.coupon;
 
 import com.loopers.domain.coupon.Coupon;
-import com.loopers.domain.coupon.CouponCommand;
-import com.loopers.domain.coupon.CouponInfo;
 import com.loopers.domain.coupon.CouponService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +22,7 @@ public class CouponFacade {
      * 회원번호와 쿠폰번호로 쿠폰 조회
      */
     public Coupon getCouponByUserIdAndCouponCode(CouponCriteria couponCriteria){
-        return couponService.getCouponByUserIdAndCouponCode(new CouponCommand(couponCriteria.userId(), couponCriteria.couponNo()));
+        return couponService.getCouponByUserIdAndCouponCode(couponCriteria.toCommand(couponCriteria.userId(), couponCriteria.couponNo()));
     }
 
     /**
@@ -42,6 +40,6 @@ public class CouponFacade {
      * @return
      */
     public void updateCouponUseYn(CouponCriteria couponCriteria){
-        couponService.updateCouponUseYn(new CouponCommand(couponCriteria.userId(), couponCriteria.couponNo()));
+        couponService.updateCouponUseYn(couponCriteria.toCommand(couponCriteria.userId(), couponCriteria.couponNo()));
     }
 }

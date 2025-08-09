@@ -16,6 +16,7 @@ import com.loopers.domain.point.PointCommand;
 import com.loopers.domain.point.PointEntity;
 import com.loopers.domain.point.PointService;
 import com.loopers.domain.product.Product;
+import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.user.User;
 import com.loopers.domain.user.UserRepository;
@@ -40,7 +41,7 @@ public class OrderFacadeTest {
     private OrderFacade orderFacade;
 
     @Autowired
-    private ProductService productService;
+    private ProductRepository productRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -82,7 +83,7 @@ public class OrderFacadeTest {
             .category1("ELECTRIC")
             .useYn(true)
             .build();
-        productService.createProduct(product1);
+        productRepository.save(product1);
 
         Product product2 = Product.builder()
             .code("A0002")
@@ -93,7 +94,7 @@ public class OrderFacadeTest {
             .category1("ELECTRIC")
             .useYn(true)
             .build();
-        productService.createProduct(product2);
+        productRepository.save(product2);
 
         Coupon coupon = Coupon.builder()
             .eventId("ABC")
