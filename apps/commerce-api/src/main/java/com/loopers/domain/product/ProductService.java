@@ -15,8 +15,9 @@ public class ProductService {
     /**
      * product 생성(upsert)
      */
-    public ProductInfo createProduct(Product product){
-        return ProductInfo.from(productRepository.save(product));
+    public void createProduct(ProductCommand productCommand){
+        Product product = productCommand.toProduct(productCommand);
+        productRepository.save(product);
     }
 
     /**

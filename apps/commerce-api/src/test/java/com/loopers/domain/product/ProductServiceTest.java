@@ -32,7 +32,9 @@ public class ProductServiceTest {
     @BeforeAll
     void setup(){
         Product initProduct = new Product("A0001", "상품1", BigDecimal.valueOf(10000), 10L, "https://naver.com/img", "상품에 대한 설명", "B0001", "ELECTRIC", null, null, true, 0L);
-        productService.createProduct(initProduct);
+
+        ProductCommand productCommand = ProductCommand.toProduct(initProduct);
+        productService.createProduct(productCommand);
     }
 
     @AfterEach

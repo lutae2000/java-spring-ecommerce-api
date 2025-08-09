@@ -1,9 +1,11 @@
 package com.loopers.application.like;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 import com.loopers.domain.domainEnum.Gender;
 import com.loopers.domain.product.Product;
+import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.user.User;
 import com.loopers.domain.user.UserRepository;
@@ -36,18 +38,27 @@ public class LikeFacadeTest {
     DatabaseCleanUp databaseCleanUp;
 
     @Autowired
-    private ProductService productService;
+    private ProductRepository productRepository;
 
     @BeforeEach
     public void setup(){
-        User userBuilder = User.builder()
+        User userBuilder1 = User.builder()
             .userId("utlee")
             .email("utlee@naver.com")
             .birthday("2000-01-01")
             .gender(Gender.M)
             .build();
 
-        userRepository.save(userBuilder);
+        userRepository.save(userBuilder1);
+
+        User userBuilder2 = User.builder()
+            .userId("ant")
+            .email("ant@naver.com")
+            .birthday("2000-01-01")
+            .gender(Gender.M)
+            .build();
+
+        userRepository.save(userBuilder2);
 
         Product product = Product.builder()
             .code("A0001")
@@ -57,7 +68,7 @@ public class LikeFacadeTest {
             .category1("ELECTRIC")
             .useYn(true)
             .build();
-        productService.createProduct(product);
+        productRepository.save(product);
     }
 
     @AfterEach
@@ -69,17 +80,59 @@ public class LikeFacadeTest {
     @DisplayName("좋아요")
     class CreateLike{
 
-        @DisplayName("성공")
+        @DisplayName("1번만 좋아요")
         @ParameterizedTest
         @CsvSource({
             "utlee, A0001",
-            "utlee, A0001"
         })
         void like(String userId, String productId){
-            LikeResult likeResult = likeFacade.like(userId, productId);
+            likeFacade.like(new LikeCriteria(userId, productId));
+            Long likeCount = likeFacade.likeCount(productId);
+            Long likeSummaryCount = likeFacade.likeSummaryCount(productId);
 
-            assertThat(likeResult.likesCount()).isEqualTo(1);
+            assertAll(
+                () -> assertThat(likeCount).isEqualTo(1),
+                () -> assertThat(likeSummaryCount).isEqualTo(1L)
+            );
         }
+
+        @DisplayName("동일 물품 좋아요 클릭")
+        @ParameterizedTest
+        @CsvSource({
+            "utlee, A0001",
+            "utlee, A0001",
+        })
+        void like_same_productID_and_userid(String userId, String productId){
+            likeFacade.like(new LikeCriteria(userId, productId));
+
+            Long likeCount = likeFacade.likeCount(productId);
+            Long likeSummaryCount = likeFacade.likeSummaryCount(productId);
+
+            assertAll(
+                () -> assertThat(likeCount).isEqualTo(1),
+                () -> assertThat(likeSummaryCount).isEqualTo(1L)
+            );
+        }
+
+
+        @DisplayName("다른 계정들이 좋아요")
+        @ParameterizedTest
+        @CsvSource({
+            "utlee, A0001",
+            "ant, A0001",
+        })
+        void like_count2(String userId, String productId){
+            likeFacade.like(new LikeCriteria(userId, productId));
+
+            Long likeCount = likeFacade.likeCount(productId);
+            Long likeSummaryCount = likeFacade.likeSummaryCount(productId);
+
+            assertAll(
+                () -> assertThat(likeCount).isEqualTo(1),
+                () -> assertThat(likeSummaryCount).isEqualTo(1L)
+            );
+        }
+
 
         @DisplayName("미존재 물품으로 시도")
         @ParameterizedTest
@@ -91,7 +144,7 @@ public class LikeFacadeTest {
 
 
             CoreException response = Assert.assertThrows(CoreException.class, () -> {
-                LikeResult likeResult = likeFacade.like(userId, productId);
+                likeFacade.like(new LikeCriteria(userId, productId));
             });
 
             assertThat(response.getErrorType()).isEqualTo(ErrorType.NOT_FOUND);
@@ -107,20 +160,42 @@ public class LikeFacadeTest {
         })
         void like_unknown(String userId, String productId){
 
-
             CoreException response = Assert.assertThrows(CoreException.class, () -> {
-                LikeResult likeResult = likeFacade.like(userId, productId);
+                likeFacade.like(new LikeCriteria(userId, productId));
             });
 
             assertThat(response.getErrorType()).isEqualTo(ErrorType.NOT_FOUND);
-            assertThat(response.getMessage()).isEqualTo("존재하는 회원이 없습니다");
+            assertThat(response.getMessage()).isEqualTo("회원정보가 없습니다");
         }
     }
 
 
+    @Nested
+    @DisplayName("좋아요 취소")
+    class Cancel{
 
-    @Test
-    public LikeResult likeCancel(String userId, String productId){
-        return likeFacade.likeCancel(userId, productId);
+        @DisplayName("정상")
+        @ParameterizedTest
+        @CsvSource({
+            "utlee, A0001",
+            "ant, A0001"
+        })
+        void likeCancel(String userId, String productId){
+             likeFacade.likeCancel(new LikeCriteria(userId, productId));
+        }
+
+        @DisplayName("실패 - 미존재 회원이 시도시 404에러")
+        @ParameterizedTest
+        @CsvSource({
+            "user1, A0001",
+            "user2, A0001"
+        })
+        void likeCancel_failed_not_exists_user(String userId, String productId){
+            CoreException response = Assert.assertThrows(CoreException.class, () -> {
+                likeFacade.likeCancel(new LikeCriteria(userId, productId));
+            });
+            assertThat(response.getErrorType()).isEqualTo(ErrorType.NOT_FOUND);
+        }
     }
+
 }

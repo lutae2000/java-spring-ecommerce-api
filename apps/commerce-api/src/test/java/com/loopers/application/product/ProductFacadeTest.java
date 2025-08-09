@@ -70,7 +70,6 @@ public class ProductFacadeTest {
         Like like = Like.builder()
             .productId("A0001")
             .userId("utlee")
-            .likeYn(true)
             .build();
         likeJpaRepository.save(like);
     }

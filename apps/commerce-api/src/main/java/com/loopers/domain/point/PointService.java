@@ -61,19 +61,20 @@ public class PointService {
     }
 
 
+    /**
+     * 회원의 포인트 조회
+     * @param loginId
+     * @return
+     */
     public PointInfo getPointInfo(String loginId) {
 
-        Optional<User> user = userRepository.selectUserByUserId(loginId);
+        User user = userRepository.selectUserByUserId(loginId)
+            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "존재하지 않는 회원입니다"));
 
-        if(ObjectUtils.isEmpty(user)){
-            throw new CoreException(ErrorType.NOT_FOUND, "존재하지 않는 회원입니다");
-        }
-
-        PointEntity pointEntity = pointRepository.findByUserId(user.get().getUserId()).orElse(null);
-
+        PointEntity pointEntity = pointRepository.findByUserId(user.getUserId()).orElse(null);
 
         PointInfo pointInfo = PointInfo.builder()
-            .userId(user.get().getUserId())
+            .userId(user.getUserId())
             .point(ObjectUtils.isEmpty(pointEntity) ? 0L : pointEntity.getPoint())
             .build();
 

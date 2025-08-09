@@ -1,6 +1,7 @@
 package com.loopers.domain.order;
 
 import com.loopers.domain.BaseEntity;
+import java.util.List;
 import java.util.Optional;
 
 public interface OrderRepository {
@@ -15,5 +16,12 @@ public interface OrderRepository {
     /**
      * 주문서 조회
      */
-    Optional<Order> findByOrderNo(String orderNo);
+    Optional<Order> findByOrderNo(String userId, String orderNo);
+
+    /**
+     * 회원이 주문한 모든 주문 조회
+     * @param userId
+     * @return
+     */
+    List<Order> findAllOrderByUserId(String userId);
 }

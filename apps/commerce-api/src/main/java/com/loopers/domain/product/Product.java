@@ -33,7 +33,7 @@ public class Product extends BaseEntity {
     private String category1;
     private String category2;
     private String category3;
-    private boolean useYn;
+    private Boolean useYn;
     private Long likes;
 
     public Product(String code, String name, BigDecimal price, Long quantity, String imgURL,
@@ -55,6 +55,10 @@ public class Product extends BaseEntity {
         validPrice(price);
         validQuantity(quantity);
         validCode(code);
+    }
+
+    public Product(String code, String name, BigDecimal price, Long quantity, String imgURL, String description, String brandCode, String category1, String category2, String category3) {
+        super();
     }
 
     private void validCode(String productCode){

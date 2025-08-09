@@ -13,7 +13,6 @@ import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.Ignore;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -46,7 +45,7 @@ public class OrderServiceTest {
             BigDecimal totalAmount = BigDecimal.valueOf(20000);
 
             //when
-            OrderInfo order = orderService.placeOrder(userId, totalAmount, items);
+            OrderInfo order = orderService.placeOrder(userId,  totalAmount, items, null);
 
             //then
             assertThat(order).isNotNull();
@@ -70,7 +69,7 @@ public class OrderServiceTest {
             BigDecimal totalAmount = BigDecimal.valueOf(0);
 
             //when
-            OrderInfo order = orderService.placeOrder(userId, totalAmount, items);
+            OrderInfo order = orderService.placeOrder(userId, totalAmount, items, null);
 
             //then
             assertThat(order).isNotNull();
@@ -94,7 +93,7 @@ public class OrderServiceTest {
 
             //when
             CoreException response = assertThrows(CoreException.class, () -> {
-                OrderInfo order = orderService.placeOrder(userId, totalAmount, items);
+                OrderInfo order = orderService.placeOrder(userId, totalAmount, items, null);
             });
 
             //then
@@ -113,7 +112,7 @@ public class OrderServiceTest {
 
             //when
             CoreException response = assertThrows(CoreException.class, () -> {
-                OrderInfo order = orderService.placeOrder(userId, totalAmount, items);
+                OrderInfo order = orderService.placeOrder(userId, totalAmount, items, null);
             });
 
             //then
@@ -135,7 +134,7 @@ public class OrderServiceTest {
 
             //when
             CoreException response = assertThrows(CoreException.class, () -> {
-                OrderInfo order = orderService.placeOrder(userId, totalAmount, items);
+                OrderInfo order = orderService.placeOrder(userId, totalAmount, items, null);
             });
 
             //then
@@ -157,7 +156,7 @@ public class OrderServiceTest {
 
             //when
             CoreException response = assertThrows(CoreException.class, () -> {
-                OrderInfo order = orderService.placeOrder(userId, totalAmount, items);
+                OrderInfo order = orderService.placeOrder(userId, totalAmount, items, null);
             });
 
             //then
@@ -167,7 +166,7 @@ public class OrderServiceTest {
 
         @DisplayName("주문 물품의 수량이 0개 - 400에러")
         @Test
-        @Disabled("결과값 제대로 검증이 안되서 무시")
+//        @Disabled("결과값 제대로 검증이 안되서 무시")
         void orderSubmit_fail_invalid_quantity(){
             // given
             List<OrderDetail> items = List.of(
@@ -180,7 +179,7 @@ public class OrderServiceTest {
 
             //when
             CoreException response = assertThrows(CoreException.class, () -> {
-                OrderInfo order = orderService.placeOrder(userId, totalAmount, OrderDetailCommand.fromEntities(items));
+                OrderInfo order = orderService.placeOrder(userId, totalAmount, OrderDetailCommand.fromEntities(items), null);
             });
 
 

@@ -2,8 +2,9 @@ package com.loopers.application.product;
 
 import com.loopers.domain.brand.BrandInfo;
 import com.loopers.domain.brand.BrandService;
-import com.loopers.domain.like.LikeInfo;
 import com.loopers.domain.like.LikeService;
+import com.loopers.domain.like.LikeSummary;
+import com.loopers.domain.product.ProductCommand;
 import com.loopers.domain.product.ProductInfo;
 import com.loopers.domain.product.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -17,10 +18,14 @@ public class ProductFacade {
     private final BrandService brandService;
 
     public ProductResult getProduct(String productId) {
-
         ProductInfo productInfo = productService.findProduct(productId);
-        Long likeCount = likeService.countLike(productInfo.getCode());
+        LikeSummary likeCount = likeService.likeSummaryByProductId(productInfo.getCode());
         BrandInfo brandInfo = brandService.findByBrandCode(productInfo.getBrandCode());
-        return ProductResult.of(productInfo, brandInfo, likeCount);
+        return ProductResult.of(productInfo, brandInfo, likeCount.getLikesCount());
+    }
+
+    public void createProduct(ProductCriteria criteria){
+        ProductCommand productCommand = ProductCriteria.toCommand(criteria);
+        productService.createProduct(productCommand);
     }
 }
