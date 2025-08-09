@@ -13,6 +13,20 @@ public interface CouponRepository {
      */
     Optional<List<Coupon>> findCouponsByUserId(String userId);
 
+
+    /**
+     * 쿠폰코드 & 회원ID 조건으로 쿠폰이 있는지 조회 조회
+     * @param userId
+     * @param couponNo
+     * @return
+     */
+    Optional<Coupon> findCouponsByCouponNoAndUserId(String userId, String couponNo);
+
+    /**
+     * 쿠폰코드로 존재하는 쿠폰이 있는지 조회
+     */
+    Optional<Coupon> findCouponByCouponNo(String couponNo);
+
     /**
      * 쿠폰 상태 변경
      * @param coupon

@@ -9,9 +9,7 @@ import com.loopers.support.error.ErrorType;
 import com.loopers.utils.DatabaseCleanUp;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -82,7 +80,7 @@ public class CouponServiceTest {
     @DisplayName("쿠폰 사용")
     class UseCoupon{
 
-        @DisplayName("실패 - 회원한테 없는 쿠폰")
+        @DisplayName("실패 - 회원한테 없는 쿠폰사용 시도")
         @ParameterizedTest
         @CsvSource({
             "utlee, 1111",
@@ -90,16 +88,12 @@ public class CouponServiceTest {
         })
         void useCoupon_whenFailed(String userId, String couponNo){
 
-            CouponCommand couponCommand = CouponCommand.builder()
-                .userId(userId)
-                .couponNo(couponNo)
-                .build();
-
+            CouponCommand couponCommand = new CouponCommand(userId, couponNo);
             CoreException response = assertThrows(CoreException.class, () -> {
                 couponService.updateCouponUseYn(couponCommand);
             });
 
-            assertThat(response.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
+            assertThat(response.getErrorType()).isEqualTo(ErrorType.NOT_FOUND);
         }
 
         @DisplayName("성공")
@@ -110,10 +104,7 @@ public class CouponServiceTest {
         })
         void useCoupon_whenSucceed(String userId, String couponNo){
 
-            CouponCommand couponCommand = CouponCommand.builder()
-                .userId(userId)
-                .couponNo(couponNo)
-                .build();
+            CouponCommand couponCommand = new CouponCommand(userId, couponNo);
             couponService.updateCouponUseYn(couponCommand);
         }
 
@@ -125,10 +116,7 @@ public class CouponServiceTest {
         })
         void useCoupon_alreadyUsedCoupon(String userId, String couponNo){
 
-            CouponCommand couponCommand = CouponCommand.builder()
-                .userId(userId)
-                .couponNo(couponNo)
-                .build();
+            CouponCommand couponCommand = new CouponCommand(userId, couponNo);
 
             CoreException response = assertThrows(CoreException.class, () -> {
                 couponService.updateCouponUseYn(couponCommand);
@@ -149,9 +137,9 @@ public class CouponServiceTest {
         })
         void getCoupon(String userId){
 
-            Optional<List<Coupon>> list=  couponService.getCoupons(userId);
+            List<Coupon> list=  couponService.getCouponsByUserId(userId);
 
-            assertThat(list.get().size()).isEqualTo(3);
+            assertThat(list.size()).isEqualTo(3);
         }
 
 
@@ -163,9 +151,9 @@ public class CouponServiceTest {
         })
         void getCoupon_no_coupon_list(String userId){
 
-            Optional<List<Coupon>> list=  couponService.getCoupons(userId);
+            List<Coupon> list=  couponService.getCouponsByUserId(userId);
 
-            assertThat(list.get().size()).isEqualTo(0);
+            assertThat(list.size()).isEqualTo(0);
         }
     }
 }
