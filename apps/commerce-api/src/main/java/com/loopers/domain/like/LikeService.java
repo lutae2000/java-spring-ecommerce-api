@@ -1,6 +1,8 @@
 package com.loopers.domain.like;
 
 import jakarta.transaction.Transactional;
+import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -12,48 +14,33 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class LikeService {
     private final LikeRepository likeRepository;
-
+    private final LikeSummaryRepository likeSummaryRepository;
     /**
      * like 추가
      */
     @Transactional
-    public LikeInfo like(String userId, String productId){
+    public void like(String userId, String productId){
 
-        try{
-            Like like = Like.builder()
-                .userId(userId)
-                .productId(productId)
-                .likeYn(true)
-                .build();
-
-            likeRepository.save(like);
-        } catch (DataIntegrityViolationException e) {
-            //이미 존재해서 저장 실패한 경우 무시하고 진행
-            log.debug("::: DataIntegrityViolationException ::: {}", e.getMessage());
+        List<Like> likeCount = likeRepository.likeByProductId(productId);
+        if(likeCount.isEmpty()) {
+            likeRepository.save(new Like(userId, productId));
+            LikeSummary likeSummary = likeSummaryRepository.likeSummaryByProductId(productId);
+            likeSummary.increaseLikesCount();
+            likeSummaryRepository.updateLikeSummary(likeSummary);
         }
-
-        Long likeCount = likeRepository.countByProductId(productId);
-
-        return LikeInfo.builder()
-            .productId(productId)
-            .likesCount(likeCount)
-            .userId(userId)
-            .build();
     }
 
     /**
      * like 취소
      */
     @Transactional
-    public LikeInfo likeCancel(String userId, String productId){
+    public void likeCancel(String userId, String productId){
         likeRepository.deleteByProductIdAndUserId(userId, productId);
 
-        Long likeCount = likeRepository.countByProductId(productId);
-        return LikeInfo.builder()
-            .productId(productId)
-            .likesCount(likeCount)
-            .userId(userId)
-            .build();
+        LikeSummary likeSummary = this.likeSummaryByProductId(productId);
+        likeSummary.decreaseLikesCount();
+
+        likeSummaryRepository.updateLikeSummary(likeSummary);
     }
 
     /**
@@ -62,7 +49,16 @@ public class LikeService {
      * @param productId
      * @return
      */
-    public Long countLike(String productId){
-        return likeRepository.countByProductId(productId);
+    public List<Like> getLikeByProductId(String productId){
+        return likeRepository.likeByProductId(productId);
+    }
+
+    /**
+     * LikeSummary 카운팅
+     * @param productId
+     * @return
+     */
+    public LikeSummary likeSummaryByProductId(String productId){
+        return likeSummaryRepository.likeSummaryByProductId(productId);
     }
 }
