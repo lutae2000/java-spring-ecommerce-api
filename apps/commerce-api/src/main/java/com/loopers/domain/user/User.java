@@ -49,7 +49,7 @@ public class User extends BaseEntity {
 
     private void userIdValid(String userId){
         if(StringUtils.isEmpty(userId)){
-            throw new CoreException(ErrorType.BAD_REQUEST, "userId 값은 필수입니다");
+            throw new CoreException(ErrorType.BAD_REQUEST, "X-USER-ID 헤더 값은 필수입니다");
         }
         if(!userId.matches("^[a-zA-Z0-9]{1,10}$")){
             throw new CoreException(ErrorType.BAD_REQUEST, "userId는 영문 대/소문자와 숫자만 가능하며 10자 이내만 가능합니다");

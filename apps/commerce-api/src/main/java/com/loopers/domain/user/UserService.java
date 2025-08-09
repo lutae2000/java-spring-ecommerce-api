@@ -25,13 +25,10 @@ public class UserService {
     public UserInfo getUserInfo(String userId) {
         log.debug("::: inquiry userId ::: userId: {}", userId);
 
-        Optional<User> user = userRepository.selectUserByUserId(userId);
+        User user = userRepository.selectUserByUserId(userId)
+            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "회원정보가 없습니다"));
 
-        if(user.isPresent()){
-            return UserInfo.from(user.get());
-        }
-
-        throw new CoreException(ErrorType.NOT_FOUND, "존재하는 회원이 없습니다");
+        return UserInfo.from(user);
     }
 
     /**
@@ -45,14 +42,14 @@ public class UserService {
 
         log.debug("::: Creating user with login Object ::: user: {}", user);
 
-        Optional<User> result = userRepository.selectUserByUserId(user.getUserId());
+        //중복체크
+        userRepository.selectUserByUserId(user.getUserId())
+            .ifPresent( result -> {
+                throw new CoreException(ErrorType.BAD_REQUEST, "이미 존재하는 회원ID 입니다");
+            });
 
-        if(result.isPresent()){   //이미 회원가입 정보 존재여부 확인
-            throw new CoreException(ErrorType.CONFLICT, "이미 존재하는 회원ID 입니다");
-        }
+        User savedUser = userRepository.save(user);
 
-        User res = userRepository.save(user);
-
-        return UserInfo.from(user);
+        return UserInfo.from(savedUser);
     }
 }
