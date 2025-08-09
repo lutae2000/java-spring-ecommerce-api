@@ -123,8 +123,6 @@ public class OrderFacadeTest {
         void order_when_valid_succeed(){
 
             //given
-
-
             String userId = "utlee";
             BigDecimal totalAmount = BigDecimal.valueOf(4000);
 
@@ -135,7 +133,6 @@ public class OrderFacadeTest {
             assertAll(
                 () -> assertThat(orderResult.orderInfo().getOrder().getOrderNo()).isNotNull()
             );
-
 
         }
 

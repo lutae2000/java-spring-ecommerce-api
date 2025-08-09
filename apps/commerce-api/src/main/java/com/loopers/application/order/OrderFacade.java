@@ -45,24 +45,9 @@ public class OrderFacade {
 
         //쿠폰 적용가능 여부 조회
         if(StringUtils.isNotEmpty(couponNo)){
-            Optional<List<Coupon>> couponList = couponService.getCoupons(userId);
-
-            log.debug("::: couponNoList ::: {} : ", couponList.isPresent());
-
-            // F/E에서 가져온 쿠폰 번호 검증
-            Optional<List<Coupon>> checkedCoupon = couponList.stream()
-                        .filter(coupon -> coupon.contains(couponNo))
-                        .findFirst();
-
-            CouponCommand couponCommand = CouponCommand.builder()
-                .couponNo(couponNo)
-                .userId(userId)
-                .build();
-
-            // 사용처리
-            couponService.updateCouponUseYn(couponCommand);
-
-//            discountPrice = checkedCoupon.get().get(0).calculateDiscount(totalAmount);
+            CouponCommand couponCommand = new CouponCommand(userId, couponNo);
+            Coupon coupon = couponService.getCouponByUserIdAndCouponCode(couponCommand);
+            couponService.updateCouponUseYn(couponCommand);             // 사용처리
         }
 
         //포인트 잔액 조회
