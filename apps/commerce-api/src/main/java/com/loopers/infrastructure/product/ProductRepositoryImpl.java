@@ -13,7 +13,7 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     @Override
     public Product findProduct(String productId) {
-        return productJPARepository.findProductByCode(productId);
+        return productJPARepository.findProductByCodeForUpdate(productId);
     }
 
     @Override
@@ -30,7 +30,7 @@ public class ProductRepositoryImpl implements ProductRepository {
     @Override
     public void orderProduct(String productId, Long quantity) {
 
-        Product product = productJPARepository.findProductByCode(productId);
+        Product product = productJPARepository.findProductByCodeForUpdate(productId);
         product.setQuantity(product.getQuantity() - quantity);
         productJPARepository.save(product);
     }

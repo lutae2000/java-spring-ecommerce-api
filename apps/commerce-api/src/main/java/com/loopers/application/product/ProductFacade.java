@@ -2,7 +2,6 @@ package com.loopers.application.product;
 
 import com.loopers.domain.brand.BrandInfo;
 import com.loopers.domain.brand.BrandService;
-import com.loopers.domain.like.LikeInfo;
 import com.loopers.domain.like.LikeService;
 import com.loopers.domain.product.ProductInfo;
 import com.loopers.domain.product.ProductService;
@@ -19,7 +18,7 @@ public class ProductFacade {
     public ProductResult getProduct(String productId) {
 
         ProductInfo productInfo = productService.findProduct(productId);
-        Long likeCount = likeService.countLike(productInfo.getCode());
+        Long likeCount = likeService.likeCount(productInfo.getCode());
         BrandInfo brandInfo = brandService.findByBrandCode(productInfo.getBrandCode());
         return ProductResult.of(productInfo, brandInfo, likeCount);
     }
