@@ -27,14 +27,17 @@ public class ProductServiceTest {
     DatabaseCleanUp databaseCleanUp;
 
     @Autowired
+    ProductRepository productRepository;
+
+    @Autowired
     ProductService productService;
 
     @BeforeAll
     void setup(){
-        Product initProduct = new Product("A0001", "상품1", BigDecimal.valueOf(10000), 10L, "https://naver.com/img", "상품에 대한 설명", "B0001", "ELECTRIC", null, null, true, 0L);
+        Product initProduct = new Product("A0001", "상품1", BigDecimal.valueOf(10000), 10L, "https://naver.com/img",
+            "상품에 대한 설명", "B0001", "ELECTRIC", null, null, true, 0L);
 
-        ProductCommand productCommand = ProductCommand.toProduct(initProduct);
-        productService.createProduct(productCommand);
+        productRepository.save(initProduct);
     }
 
     @AfterEach

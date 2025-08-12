@@ -8,6 +8,8 @@ import com.loopers.infrastructure.like.LikeJpaRepository;
 import com.loopers.infrastructure.like.LikeSummaryJpaRepository;
 import com.loopers.utils.DatabaseCleanUp;
 import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -36,14 +38,9 @@ public class LikeServiceTest {
     @BeforeAll
     void setup() {
         // 공통 데이터 삽입 (테스트 전체에서 사용)
-        likeService.like("utlee", "shoes");
-        likeService.like("utlee", "shirts");
-
-        likeSummaryJpaRepository.save(new LikeSummary("shoes", 1L));
-        likeSummaryJpaRepository.save(new LikeSummary("shirts", 1L));
     }
 
-    @AfterEach
+    @AfterAll
     void tearDown() {
         databaseCleanUp.truncateAllTables();
     }
@@ -62,8 +59,8 @@ public class LikeServiceTest {
         })
         void CreateLike(String loginId, String code) {
             likeService.like(loginId, code);
-            List<Like> likeCount = likeService.getLikeByProductId(code);
-            assertThat(likeCount.size()).isEqualTo(1);
+            Optional<LikeSummary> like = likeSummaryJpaRepository.getLikeByProductId(code);
+            assertThat(like.get().getLikesCount()).isEqualTo(1);
         }
 
         @DisplayName("멱등성 적용")
@@ -76,8 +73,8 @@ public class LikeServiceTest {
         })
         void CreateLike_when_Failed_duplicate(String loginId, String code) {
             likeService.like(loginId, code);
-            List<Like> likeCount = likeService.getLikeByProductId(code);
-            assertThat(likeCount.size()).isEqualTo(1);
+            Optional<LikeSummary> like = likeSummaryJpaRepository.getLikeByProductId(code);
+            assertThat(like.get().getLikesCount()).isEqualTo(1);
         }
     }
 
@@ -98,9 +95,8 @@ public class LikeServiceTest {
             LikeSummary likeSummary = new LikeSummary(code, -1L);
             likeSummaryJpaRepository.save(likeSummary);
 
-            List<Like> likeCount = likeService.getLikeByProductId(code);
-
-            assertThat(likeCount.size()).isEqualTo(0);
+            Optional<LikeSummary> like = likeSummaryJpaRepository.getLikeByProductId(code);
+            assertThat(like.get().getLikesCount()).isEqualTo(0);
         }
     }
 
@@ -116,8 +112,8 @@ public class LikeServiceTest {
         likeService.like("anonymous", "phone");
         likeService.likeCancel("anonymous", "phone");   //anonymous 유저가 취소
 
-
-        assertThat(likeService.getLikeByProductId("phone").size()).isEqualTo(1);
+        LikeSummary phoneSummary = likeService.likeSummaryByProductId("phone");
+        assertThat(phoneSummary.getLikesCount()).isEqualTo(2);
     }
 
 }

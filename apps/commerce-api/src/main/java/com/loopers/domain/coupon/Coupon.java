@@ -95,7 +95,7 @@ public class Coupon extends BaseEntity {
     }
 
     // 쿠폰 할인금액 계산
-    public BigDecimal calculateDiscount(BigDecimal orderAmount){
+    public BigDecimal calculateDiscount(DiscountType discountType, BigDecimal orderAmount){
         switch (discountType){
             case RATIO_DISCOUNT -> {return discountRatePrice(orderAmount);}
             case AMOUNT_DISCOUNT -> {return discountAmountPrice(orderAmount);}

@@ -37,8 +37,9 @@ public class CouponService {
      */
     @Transactional(readOnly = true)
     public Coupon getCouponByUserIdAndCouponCode(CouponCommand couponCommand){
-        Coupon coupon = couponRepository.findCouponsByCouponNoAndUserId(couponCommand.userId(), couponCommand.couponNo())
-            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND,"유효한 쿠폰이 없습니다"));
+/*        Coupon coupon = couponRepository.findCouponsByCouponNoAndUserId(couponCommand.userId(), couponCommand.couponNo())
+            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND,"유효한 쿠폰이 없습니다"));*/
+        Coupon coupon = this.getCouponByCouponNo(couponCommand.couponNo());
 
         if(Boolean.TRUE.equals(coupon.getUseYn())){
             throw new CoreException(ErrorType.BAD_REQUEST, "이미 사용된 쿠폰입니다");
@@ -77,8 +78,30 @@ public class CouponService {
         Coupon coupon = this.getCouponByCouponNo(couponCommand.couponNo());
 
         if(ObjectUtils.isNotEmpty(coupon)){
-            couponRepository.updateCouponUseYn(couponCommand);
+            int updatedRows = couponRepository.updateCouponUseYn(couponCommand);
+            if(updatedRows == 0) {
+                throw new CoreException(ErrorType.BAD_REQUEST, "이미 사용된 쿠폰입니다");
+            }
         }
+    }
+
+    /**
+     * 쿠폰 조회 및 사용을 하나의 트랜잭션으로 처리
+     * @param couponCommand
+     * @return 사용된 쿠폰 정보
+     */
+    @Transactional
+    public Coupon getCouponAndUse(CouponCommand couponCommand) {
+        Coupon coupon = this.getCouponByCouponNo(couponCommand.couponNo());
+        
+        if(ObjectUtils.isNotEmpty(coupon)){
+            int updatedRows = couponRepository.updateCouponUseYn(couponCommand);
+            if(updatedRows == 0) {
+                throw new CoreException(ErrorType.BAD_REQUEST, "이미 사용된 쿠폰입니다");
+            }
+        }
+        
+        return coupon;
     }
 
     /**

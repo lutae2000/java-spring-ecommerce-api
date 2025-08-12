@@ -43,22 +43,9 @@ public record ProductCommand (
             productCommand.brandCode(),
             productCommand.category1(),
             productCommand.category2(),
-            productCommand.category3()
-        );
-    }
-    
-    public static ProductCommand toProduct(Product product){
-        return new ProductCommand(
-            product.getCode(),
-            product.getName(),
-            product.getPrice(),
-            product.getQuantity(),
-            product.getImgURL(),
-            product.getDescription(),
-            product.getBrandCode(),
-            product.getCategory1(),
-            product.getCategory2(),
-            product.getCategory3()
+            productCommand.category3(),
+            true,
+            0L
         );
     }
 

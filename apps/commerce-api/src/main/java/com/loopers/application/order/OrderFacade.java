@@ -3,9 +3,13 @@ package com.loopers.application.order;
 import com.loopers.domain.coupon.Coupon;
 import com.loopers.domain.coupon.CouponCommand;
 import com.loopers.domain.coupon.CouponService;
+import com.loopers.domain.domainEnum.DiscountType;
+import com.loopers.domain.order.Order;
+import com.loopers.domain.order.OrderDetail;
 import com.loopers.domain.order.OrderDetailCommand.orderItem;
 import com.loopers.domain.order.OrderInfo;
 import com.loopers.domain.order.OrderService;
+import com.loopers.domain.point.Point;
 import com.loopers.domain.point.PointInfo;
 import com.loopers.domain.point.PointService;
 import com.loopers.domain.product.ProductService;
@@ -34,7 +38,7 @@ public class OrderFacade {
     private final CouponService couponService;
 
     @Transactional
-    public OrderResult orderSubmit(String userId, String couponNo, BigDecimal totalAmount, List<orderItem> orderItems){
+    public OrderResult orderSubmit(String userId, Order order){
         BigDecimal discountPrice = BigDecimal.ZERO;
 
         //회원 유효성 검증
@@ -44,25 +48,41 @@ public class OrderFacade {
         }
 
         //쿠폰 적용가능 여부 조회
-        if(StringUtils.isNotEmpty(couponNo)){
-            CouponCommand couponCommand = new CouponCommand(userId, couponNo);
-            Coupon coupon = couponService.getCouponByUserIdAndCouponCode(couponCommand);
-            couponService.updateCouponUseYn(couponCommand);             // 사용처리
+        if(StringUtils.isNotEmpty(order.getCouponNo())){
+            try {
+                CouponCommand couponCommand = new CouponCommand(userId, order.getCouponNo());
+                Coupon coupon = couponService.getCouponAndUse(couponCommand);  // 조회와 사용을 하나의 트랜잭션으로 처리
+
+                //쿠폰 할인금액 계산
+                discountPrice = coupon.calculateDiscount(coupon.getDiscountType(),
+                    order.getOrderDetailList().stream()
+                        .map(orderDetail -> orderDetail.getUnitPrice().multiply(BigDecimal.valueOf(orderDetail.getQuantity())))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+                );
+            } catch (CoreException e) {
+                // 쿠폰 사용 실패 시 쿠폰 없이 주문 진행
+                log.warn("쿠폰 사용 실패: {}, 쿠폰 없이 주문 진행", e.getMessage());
+            }
         }
+
 
         //포인트 잔액 조회
-        PointInfo pointInfo = pointService.getPointInfo(userInfo.getUserId());
+        Point pointInfo = pointService.getPointInfo(userInfo.getUserId());
         log.debug("::: pointInfo ::: {}", pointInfo);
 
-        if(pointInfo.getPoint() < totalAmount.subtract(discountPrice).intValue()){
+        Long cost = order.getTotalAmount().subtract(discountPrice).longValue();
+
+        if(pointInfo.getPoint() < cost){
             throw new CoreException(ErrorType.BAD_REQUEST, "가지고 있는 잔액이 부족합니다");
+        } else{
+            pointService.updatePoint(userInfo.getUserId(), cost);
         }
 
-        OrderInfo orderInfo = orderService.placeOrder(userId, totalAmount, orderItems, null);
-
-        for(orderItem item : orderItems){   //재고 차감
-            productService.orderedStock(item.productId(), item.quantity());
+        for(OrderDetail item : order.getOrderDetailList()){   //재고 차감
+            productService.orderedStock(item.getProductId(), item.getQuantity());
         }
+
+        OrderInfo orderInfo = orderService.placeOrder(userId, order, discountPrice);
 
         return OrderResult.of(orderInfo);
     }

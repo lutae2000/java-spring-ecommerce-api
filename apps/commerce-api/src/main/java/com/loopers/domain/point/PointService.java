@@ -10,6 +10,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 
 @Service
@@ -27,6 +28,7 @@ public class PointService {
      * @param point
      * @return
      */
+    @Transactional
     public PointInfo chargePoint(PointCommand.Create command) {
 
         log.debug("::: chargePoint ::: command: {}", command);
@@ -39,24 +41,24 @@ public class PointService {
         }
 
         Long totalPoint = 0L;
-        PointEntity pointEntity = pointRepository.findByUserId(user.getUserId()).orElse(null);
+        Point Point = pointRepository.findByUserId(user.getUserId()).orElse(null);
 
-        if(ObjectUtils.isEmpty(pointEntity)) {  //값이 없으면 회원가입 후 최초 포인트 적립
+        if(ObjectUtils.isEmpty(Point)) {  //값이 없으면 회원가입 후 최초 포인트 적립
             totalPoint = command.point();
-            pointEntity = PointEntity.builder()
+            Point = Point.builder()
                 .userId(user.getUserId())
                 .point(totalPoint)
                 .build();
         } else {    //조회해온 포인트 최종값 + 충전할 포인트
-            totalPoint = pointEntity.getPoint() + command.point();
-            pointEntity.setPoint(totalPoint);
+            totalPoint = Point.getPoint() + command.point();
+            Point.setPoint(totalPoint);
         }
 
-        pointRepository.save(pointEntity);
+        pointRepository.save(Point);
 
         return PointInfo.builder()
-            .userId(pointEntity.getUserId())
-            .point(pointEntity.getPoint())
+            .userId(Point.getUserId())
+            .point(Point.getPoint())
             .build();
     }
 
@@ -66,19 +68,27 @@ public class PointService {
      * @param loginId
      * @return
      */
-    public PointInfo getPointInfo(String loginId) {
+    @Transactional
+    public Point getPointInfo(String loginId) {
 
         User user = userRepository.selectUserByUserId(loginId)
             .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "존재하지 않는 회원입니다"));
 
-        PointEntity pointEntity = pointRepository.findByUserId(user.getUserId()).orElse(null);
+        Point point = pointRepository.findByUserId(loginId)
+            .orElseGet(() -> Point.builder().userId(loginId).point(0L).build());
 
-        PointInfo pointInfo = PointInfo.builder()
+/*        PointInfo pointInfo = PointInfo.builder()
             .userId(user.getUserId())
-            .point(ObjectUtils.isEmpty(pointEntity) ? 0L : pointEntity.getPoint())
-            .build();
+            .point(ObjectUtils.isEmpty(Point) ? 0L : Point.getPoint())
+            .build();*/
 
-        return pointInfo;
+        return point;
+    }
+
+    @Transactional
+    public void updatePoint(String loginId, Long cost) {
+        Point point = this.getPointInfo(loginId);
+        pointRepository.updatePoint(loginId, point.getPoint() - cost);
     }
 
 }

@@ -24,8 +24,6 @@ public class LikeSummary {
     public LikeSummary(String productId, Long likesCount) {
         this.productId = productId;
         this.likesCount = likesCount;
-        increaseLikesCount();
-        decreaseLikesCount();
     }
 
     public void increaseLikesCount(){

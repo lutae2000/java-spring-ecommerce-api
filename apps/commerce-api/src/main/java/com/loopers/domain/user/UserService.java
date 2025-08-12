@@ -9,6 +9,7 @@ import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -22,11 +23,12 @@ public class UserService {
      * @param userId
      * @return UserDto
      */
+    @Transactional(readOnly = true)
     public UserInfo getUserInfo(String userId) {
         log.debug("::: inquiry userId ::: userId: {}", userId);
 
         User user = userRepository.selectUserByUserId(userId)
-            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "회원정보가 없습니다"));
+            .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "존재하는 회원이 없습니다"));
 
         return UserInfo.from(user);
     }
@@ -36,6 +38,7 @@ public class UserService {
      * @param user
      * @return UserDto
      */
+    @Transactional
     public UserInfo createUserId(UserCommand.Create userCommand) {
 
         User user = userCommand.toUserEntity();

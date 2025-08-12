@@ -9,6 +9,7 @@ import com.loopers.domain.product.ProductService;
 import com.loopers.domain.user.UserInfo;
 import com.loopers.domain.user.UserService;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,19 +44,15 @@ public class LikeFacade {
     public void likeCancel(LikeCriteria likeCriteria){
         UserInfo userInfo = userService.getUserInfo(likeCriteria.userId());
         likeService.likeCancel(userInfo.getUserId(), likeCriteria.productId());
-
-        LikeSummary likeSummary = new LikeSummary(likeCriteria.productId(), 0L);
-        likeSummary.decreaseLikesCount();
-        likeSummaryRepository.updateLikeSummary(likeSummary);
     }
 
     /**
      * 좋아요 행으로 카운팅
      */
-    @Transactional(readOnly = true)
-    public Long likeCount(String productId){
-        List<Like> likeList = likeService.getLikeByProductId(productId);
-        return (long) likeList.size();
+    @Transactional
+    public Boolean likeExist(String userId, String productId){
+        Boolean like = likeService.likeExist(userId, productId);
+        return like;
     }
 
     /**
@@ -63,7 +60,9 @@ public class LikeFacade {
      */
     @Transactional(readOnly = true)
     public Long likeSummaryCount(String productId){
-        LikeSummary likeSummary = likeService.likeSummaryByProductId(productId);
-        return likeSummary.getLikesCount();
+        Long likeSummaryCount = likeService.LikeSummaryCountByProductId(productId);
+        return likeSummaryCount;
     }
+
+
 }

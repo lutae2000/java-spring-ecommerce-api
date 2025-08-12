@@ -48,8 +48,8 @@ public class CouponRepositoryImpl implements CouponRepository {
      * @return
      */
     @Override
-    public void updateCouponUseYn(CouponCommand coupon) {
-        couponJpaRepository.updateCouponUseYn(coupon.userId(), coupon.couponNo());
+    public int updateCouponUseYn(CouponCommand coupon) {
+        return couponJpaRepository.updateCouponUseYn(coupon.userId(), coupon.couponNo());
     }
 
     /**

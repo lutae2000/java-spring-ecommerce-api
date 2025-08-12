@@ -57,10 +57,6 @@ public class Product extends BaseEntity {
         validCode(code);
     }
 
-    public Product(String code, String name, BigDecimal price, Long quantity, String imgURL, String description, String brandCode, String category1, String category2, String category3) {
-        super();
-    }
-
     private void validCode(String productCode){
         if(StringUtils.isEmpty(productCode)){
             throw new CoreException(ErrorType.BAD_REQUEST, "상품 코드는 필수값 입니다");

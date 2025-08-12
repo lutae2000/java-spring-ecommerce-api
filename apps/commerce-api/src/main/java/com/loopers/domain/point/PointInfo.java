@@ -21,10 +21,10 @@ public class PointInfo {
         this.userId = loginId;
     }
 
-    public static PointInfo from(PointEntity pointEntity){
+    public static PointInfo from(Point Point){
         return PointInfo.builder()
-            .point(pointEntity.getPoint() == null ? 0L : pointEntity.getPoint())
-            .userId(pointEntity.getUserId())
+            .point(Point.getPoint() == null ? 0L : Point.getPoint())
+            .userId(Point.getUserId())
             .build();
     }
 

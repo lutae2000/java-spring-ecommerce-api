@@ -21,6 +21,14 @@ public interface LikeSummaryJpaRepository extends JpaRepository<LikeSummary, Lon
     Optional<LikeSummary> getLikeByProductId(@Param("productId") String productId);
 
     /**
+     * 물품의 좋아요 갯수 조회
+     * @param productId
+     * @return
+     */
+    @Query("select count(l) from LikeSummary l where l.productId = :productId")
+    Long LikeCountByProductId(@Param("productId") String productId);
+
+    /**
      * 물품의 좋아요 총 카운팅 저장
      * @param LikeSummary
      */

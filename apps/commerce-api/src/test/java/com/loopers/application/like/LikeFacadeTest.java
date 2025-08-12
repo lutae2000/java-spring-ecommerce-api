@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import com.loopers.domain.domainEnum.Gender;
+import com.loopers.domain.like.LikeService;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.product.ProductService;
@@ -33,6 +34,9 @@ public class LikeFacadeTest {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    LikeService likeService;
 
     @Autowired
     DatabaseCleanUp databaseCleanUp;
@@ -81,35 +85,34 @@ public class LikeFacadeTest {
     class CreateLike{
 
         @DisplayName("1번만 좋아요")
-        @ParameterizedTest
-        @CsvSource({
-            "utlee, A0001",
-        })
-        void like(String userId, String productId){
+        @Test
+        void like(){
+            String userId = "utlee";
+            String productId = "A0001";
             likeFacade.like(new LikeCriteria(userId, productId));
-            Long likeCount = likeFacade.likeCount(productId);
+            Boolean like = likeFacade.likeExist(userId, productId);
             Long likeSummaryCount = likeFacade.likeSummaryCount(productId);
 
             assertAll(
-                () -> assertThat(likeCount).isEqualTo(1),
+                () -> assertThat(like).isEqualTo(Boolean.TRUE),
                 () -> assertThat(likeSummaryCount).isEqualTo(1L)
             );
         }
 
         @DisplayName("동일 물품 좋아요 클릭")
-        @ParameterizedTest
-        @CsvSource({
-            "utlee, A0001",
-            "utlee, A0001",
-        })
-        void like_same_productID_and_userid(String userId, String productId){
+        @Test
+        void like_same_productID_and_userid(){
+            String userId = "utlee";
+            String productId = "A0001";
+
+            likeFacade.like(new LikeCriteria(userId, productId));
             likeFacade.like(new LikeCriteria(userId, productId));
 
-            Long likeCount = likeFacade.likeCount(productId);
+            Boolean like = likeService.likeExist(userId, productId);
             Long likeSummaryCount = likeFacade.likeSummaryCount(productId);
 
             assertAll(
-                () -> assertThat(likeCount).isEqualTo(1),
+                () -> assertThat(like).isEqualTo(Boolean.TRUE),
                 () -> assertThat(likeSummaryCount).isEqualTo(1L)
             );
         }
@@ -124,11 +127,11 @@ public class LikeFacadeTest {
         void like_count2(String userId, String productId){
             likeFacade.like(new LikeCriteria(userId, productId));
 
-            Long likeCount = likeFacade.likeCount(productId);
+            Boolean like = likeFacade.likeExist(userId, productId);
             Long likeSummaryCount = likeFacade.likeSummaryCount(productId);
 
             assertAll(
-                () -> assertThat(likeCount).isEqualTo(1),
+                () -> assertThat(like).isEqualTo(Boolean.TRUE),
                 () -> assertThat(likeSummaryCount).isEqualTo(1L)
             );
         }
@@ -165,7 +168,7 @@ public class LikeFacadeTest {
             });
 
             assertThat(response.getErrorType()).isEqualTo(ErrorType.NOT_FOUND);
-            assertThat(response.getMessage()).isEqualTo("회원정보가 없습니다");
+            assertThat(response.getMessage()).isEqualTo("존재하는 회원이 없습니다");
         }
     }
 

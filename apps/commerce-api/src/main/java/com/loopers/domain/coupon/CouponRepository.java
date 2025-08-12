@@ -32,7 +32,7 @@ public interface CouponRepository {
      * @param coupon
      * @return
      */
-    void updateCouponUseYn(CouponCommand coupon);
+    int updateCouponUseYn(CouponCommand coupon);
 
     /**
      * 쿠폰 상태 변경

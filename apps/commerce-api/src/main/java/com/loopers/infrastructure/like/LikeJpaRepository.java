@@ -12,8 +12,9 @@ import org.springframework.data.repository.query.Param;
 
 public interface LikeJpaRepository extends JpaRepository<Like, Long> {
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select l from Like l where l.userId = :userId and l.productId = :productId")
-    List<Like> findByUserIdAndProductId(@Param("userId") String userId, @Param("productId") String productId);
+    Optional<Like> findByUserIdAndProductId(@Param("userId") String userId, @Param("productId") String productId);
 
     @Modifying
     @Query("delete from Like l where l.userId = :userId and l.productId = :productId")
@@ -21,5 +22,8 @@ public interface LikeJpaRepository extends JpaRepository<Like, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select l from Like l where l.productId = :productId")
-    List<Like> likeByProductId(@Param("productId") String productId);
+    Optional<Like> likeByProductId(@Param("productId") String productId);
+
+    @Query("select count(l) > 0 from Like l where l.userId = :userId and l.productId = :productId")
+    Boolean existsByUserIdAndProductId(@Param("userId") String userId, @Param("productId") String productId);
 }

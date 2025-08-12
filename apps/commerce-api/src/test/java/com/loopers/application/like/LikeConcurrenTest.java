@@ -15,9 +15,12 @@ import com.loopers.domain.user.User;
 import com.loopers.domain.user.UserRepository;
 import com.loopers.utils.DatabaseCleanUp;
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,8 +38,6 @@ public class LikeConcurrenTest {
     @Autowired
     LikeSummaryRepository likeSummaryRepository;
 
-    @Autowired
-    LikeService likeService;
 
     @Autowired
     UserRepository userRepository;
@@ -50,7 +51,7 @@ public class LikeConcurrenTest {
     @BeforeEach
     public void setup(){
 
-        for( int i = 0; i < 100; i++){
+        for( int i = 0; i <= 100; i++){
             //유저 100개 생성
             userRepository.save(
                 User.builder()
@@ -108,13 +109,52 @@ public class LikeConcurrenTest {
             latch.await(); // 모든 스레드가 끝날 때까지 기다림
             executorService.shutdown();
 
-            //insert 된 좋아요 카운팅
-//            Long likeCount = likeFacade.likeCount("A0001");
-//            assertThat(likeCount).isEqualTo(threadCount);
-
-            LikeSummary likeSummaryCount = likeSummaryRepository.likeSummaryByProductId("A0001");
-            assertThat(likeSummaryCount.getLikesCount()).isEqualTo(threadCount);
+            Long likeCount = likeFacade.likeSummaryCount("A0001");
+            assertThat(likeCount).isEqualTo(threadCount);
         }
+
+        @DisplayName("병렬 요청으로 동일상품에 대해 좋아요 테스트")
+        @Test
+        void completableFuture_test_likeCreate_when_same_product_and_same_user() throws InterruptedException{
+
+            ExecutorService executor = Executors.newFixedThreadPool(100);
+            List<CompletableFuture<Void>> futures = IntStream.rangeClosed(1, 100)
+                .mapToObj(i -> {
+                    String userId = "user" + i;
+                    return CompletableFuture.runAsync(() -> {
+                        likeFacade.like(new LikeCriteria(userId, "A0001"));
+                    });
+                }).toList();
+
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+            // 검증: 좋아요 수가 100개인지 확인
+            Long likeCount = likeFacade.likeSummaryCount("A0001");
+            assertThat(likeCount).isEqualTo(100);
+
+            executor.shutdown();
+        }
+    }
+
+    @DisplayName("동일 회원이 동시에 좋아요 호출하는 경우")
+    @Test
+    void likeCreate_when_same_user_and_same_product(){
+        String userId = "user1";
+        String productId = "A0001";
+        ExecutorService executor = Executors.newFixedThreadPool(100);
+
+        List<CompletableFuture<Void>> futures = IntStream.rangeClosed(1, 100)
+            .mapToObj(i -> CompletableFuture.runAsync(() -> {
+                likeFacade.like(new LikeCriteria(userId, productId));
+            }))
+            .toList();
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        // 검증: 좋아요 수가 100개인지 확인
+        Long likeCount = likeFacade.likeSummaryCount("A0001");
+        assertThat(likeCount).isEqualTo(1);
+
+        executor.shutdown();
     }
 
 }

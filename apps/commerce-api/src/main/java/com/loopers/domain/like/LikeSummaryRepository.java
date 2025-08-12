@@ -17,5 +17,10 @@ public interface LikeSummaryRepository {
      */
     LikeSummary likeSummaryByProductId(String productId);
 
-
+    /**
+     * 물품의 좋아요 갯수 조회
+     * @param productId
+     * @return
+     */
+    Long LikeSummaryCountByProductId(String productId);
 }
