@@ -1,5 +1,7 @@
 package com.loopers.domain.product;
 
+import java.util.List;
+
 public interface ProductRepository {
 
 
@@ -24,4 +26,8 @@ public interface ProductRepository {
      * @param quantity
      */
     void orderProduct(String productId, Long quantity);
+
+    void saveAll(List<Product> products);
+
+    public int count();
 }

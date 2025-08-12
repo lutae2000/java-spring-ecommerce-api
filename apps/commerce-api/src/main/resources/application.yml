@@ -12,6 +12,10 @@ server:
 
 spring:
   jpa:
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 10000
     hibernate:
       ddl-auto: update
     show-sql: true

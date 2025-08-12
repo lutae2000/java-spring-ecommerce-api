@@ -3,6 +3,7 @@ package com.loopers.infrastructure.product;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductInfo;
 import com.loopers.domain.product.ProductRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -33,5 +34,16 @@ public class ProductRepositoryImpl implements ProductRepository {
         Product product = productJPARepository.findProductByCode(productId);
         product.setQuantity(product.getQuantity() - quantity);
         productJPARepository.save(product);
+    }
+
+    @Override
+    public void saveAll(List<Product> products) {
+        productJPARepository.saveAll(products);
+    }
+
+    @Override
+    public int count() {
+        int count = productJPARepository.countAllByCode("p1");
+        return count;
     }
 }
