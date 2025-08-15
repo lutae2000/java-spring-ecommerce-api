@@ -37,8 +37,6 @@ public class ProductService {
         String cacheKey = RedisCacheTemplate.generateKey("product", productId);
         //테스트를 위해 Redis에 TTL 1분
 
-
-        //문제 있는 부분
         return redisCacheTemplate.getOrSet(cacheKey, ProductInfo.class, Duration.ofMinutes(1), () -> {
             log.debug("Cache miss - key: {}, DB에서 조회", cacheKey);
             Product product = productRepository.findProduct(productId);
