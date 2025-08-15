@@ -1,9 +1,13 @@
 package com.loopers.interfaces.api.product;
 
 import com.loopers.application.product.ProductCriteria;
+import com.loopers.domain.product.SortBy;
 import java.math.BigDecimal;
 
 public record ProductDto(
+    SortBy sortBy,
+    int page,
+    int size,
     String code,
     String name,
     BigDecimal price,
@@ -26,7 +30,10 @@ public record ProductDto(
             productDto.brandCode(),
             productDto.category1(),
             productDto.category2(),
-            productDto.category3()
+            productDto.category3(),
+            productDto.sortBy,
+            productDto.page,
+            productDto.size
         );
     }
 }

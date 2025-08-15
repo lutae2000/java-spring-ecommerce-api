@@ -2,7 +2,6 @@ package com.loopers.infrastructure.like;
 
 import com.loopers.domain.like.Like;
 import com.loopers.domain.like.LikeRepository;
-import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -23,6 +22,11 @@ public class LikeRepositoryImpl implements LikeRepository {
     @Override
     public Optional<Like> findByUserIdAndProductId(String userId, String productId) {
         return likeJpaRepository.findByUserIdAndProductId(userId, productId);
+    }
+
+    @Override
+    public Optional<Like> findByUserIdAndProductIdOptimistic(String userId, String productId) {
+        return likeJpaRepository.findByUserIdAndProductIdOptimistic(userId, productId);
     }
 
     /**

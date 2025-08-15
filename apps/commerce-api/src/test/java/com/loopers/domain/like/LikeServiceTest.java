@@ -4,10 +4,8 @@ package com.loopers.domain.like;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-import com.loopers.infrastructure.like.LikeJpaRepository;
 import com.loopers.infrastructure.like.LikeSummaryJpaRepository;
 import com.loopers.utils.DatabaseCleanUp;
-import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -40,6 +38,11 @@ public class LikeServiceTest {
         // 공통 데이터 삽입 (테스트 전체에서 사용)
     }
 
+    @AfterEach
+    void cleanup() {
+        databaseCleanUp.truncateAllTables();
+    }
+
     @AfterAll
     void tearDown() {
         databaseCleanUp.truncateAllTables();
@@ -59,7 +62,7 @@ public class LikeServiceTest {
         })
         void CreateLike(String loginId, String code) {
             likeService.like(loginId, code);
-            Optional<LikeSummary> like = likeSummaryJpaRepository.getLikeByProductId(code);
+            Optional<LikeSummary> like = likeSummaryJpaRepository.getLikeByProductIdForUpdate(code);
             assertThat(like.get().getLikesCount()).isEqualTo(1);
         }
 
@@ -73,7 +76,7 @@ public class LikeServiceTest {
         })
         void CreateLike_when_Failed_duplicate(String loginId, String code) {
             likeService.like(loginId, code);
-            Optional<LikeSummary> like = likeSummaryJpaRepository.getLikeByProductId(code);
+            Optional<LikeSummary> like = likeSummaryJpaRepository.getLikeByProductIdForUpdate(code);
             assertThat(like.get().getLikesCount()).isEqualTo(1);
         }
     }
@@ -82,7 +85,7 @@ public class LikeServiceTest {
     @DisplayName("좋아요 취소")
     class Cancel {
 
-        @DisplayName("좋아요가 없는 상태에서 취소 성공")
+        @DisplayName("좋아요가 있는 상태에서 취소 성공")
         @ParameterizedTest
         @CsvSource({
             "utlee, pants",
@@ -91,11 +94,13 @@ public class LikeServiceTest {
             "unicorn, AOC"
         })
         void CreateLike(String loginId, String code) {
+            // 먼저 좋아요 생성
+            likeService.like(loginId, code);
+            
+            // 좋아요 취소
             likeService.likeCancel(loginId, code);
-            LikeSummary likeSummary = new LikeSummary(code, -1L);
-            likeSummaryJpaRepository.save(likeSummary);
-
-            Optional<LikeSummary> like = likeSummaryJpaRepository.getLikeByProductId(code);
+            
+            Optional<LikeSummary> like = likeSummaryJpaRepository.getLikeByProductIdForUpdate(code);
             assertThat(like.get().getLikesCount()).isEqualTo(0);
         }
     }
@@ -113,7 +118,13 @@ public class LikeServiceTest {
         likeService.likeCancel("anonymous", "phone");   //anonymous 유저가 취소
 
         LikeSummary phoneSummary = likeService.likeSummaryByProductId("phone");
-        assertThat(phoneSummary.getLikesCount()).isEqualTo(2);
+        assertThat(phoneSummary.getLikesCount()).isEqualTo(2); // utlee, park만 남음 (anonymous는 취소됨)
+        
+        LikeSummary pastaSummary = likeService.likeSummaryByProductId("pasta");
+        assertThat(pastaSummary.getLikesCount()).isEqualTo(2); // utlee, unicorn
+        
+        LikeSummary cokeSummary = likeService.likeSummaryByProductId("coke");
+        assertThat(cokeSummary.getLikesCount()).isEqualTo(1); // AOC만
     }
 
 }
