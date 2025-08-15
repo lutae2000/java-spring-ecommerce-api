@@ -24,7 +24,7 @@ public class PointTest {
         //given
 
         //when
-        PointEntity pointModel = new PointEntity(loginId, pointValue);
+        Point pointModel = new Point(loginId, pointValue);
 
         //then
         assert pointModel.getUserId().equals(loginId);
@@ -43,7 +43,7 @@ public class PointTest {
 
         //when
         CoreException response = assertThrows(CoreException.class, () -> {
-            PointEntity pointModel = new PointEntity(loginId, pointValue);
+            Point pointModel = new Point(loginId, pointValue);
         });
 
         //then

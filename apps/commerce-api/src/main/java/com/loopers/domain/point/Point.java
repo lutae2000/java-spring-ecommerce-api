@@ -16,14 +16,14 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @Table(name = "point")
-public class PointEntity {
+public class Point {
 
     @Id
     private String userId;
 
     private Long point;
 
-    public PointEntity(String userId, Long point) {
+    public Point(String userId, Long point) {
         this.point = point;
         this.userId = userId;
         validPoint(point);

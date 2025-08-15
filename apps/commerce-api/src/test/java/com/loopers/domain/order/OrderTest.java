@@ -27,49 +27,49 @@ public class OrderTest {
             List<OrderDetail> orderItem = new ArrayList<>();
             orderItem.add(new OrderDetail("A0001", 2L, BigDecimal.valueOf(10000)));
 
-            Order order = new Order("ORDER0001","utlee", OrderStatus.ORDER_SUBMIT, BigDecimal.valueOf(20000), orderItem);
+            Order order = Order.createOrder("utlee", orderItem, null, null);
         }
 
 
-        @DisplayName("주문자 검증 실패")
+        @DisplayName("주문자 검증 실패 - 400에러")
         @Test
         void order_when_invalid_fail_null_user_id(){
             List<OrderDetail> orderItem = new ArrayList<>();
             orderItem.add(new OrderDetail("A0001", 2L, BigDecimal.valueOf(10000)));
 
             CoreException response = assertThrows(CoreException.class, () -> {
-                Order order = new Order("ABCV1234", null, OrderStatus.ORDER_SUBMIT, BigDecimal.valueOf(20000), orderItem);
+                Order order = Order.createOrder(null, orderItem, null, null);
             });
 
             assertThat(response.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
             assertThat(response.getMessage()).isEqualTo("주문자 계정은 필수입니다");
         }
 
-        @DisplayName("주문상세가 없는경우")
+        @DisplayName("주문상세가 없는경우 - 400에러")
         @Test
         void order_when_invalid_fail_not_exist_orderItem(){
             List<OrderDetail> orderItem = new ArrayList<>();
 
             CoreException response = assertThrows(CoreException.class, () -> {
-                Order order = new Order("ABCV1234", "utlee", OrderStatus.ORDER_SUBMIT, BigDecimal.valueOf(20000), orderItem);
+                Order order = Order.createOrder("user", orderItem, null, null);
             });
 
             assertThat(response.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
             assertThat(response.getMessage()).isEqualTo("주문하려는 물품은 필수입니다");
         }
 
-        @DisplayName("총액과 주문서 각 항목의 총액이 다른경우")
+        @DisplayName("쿠폰이 정상 적용되지 않았을 경우 - 400에러")
         @Test
         void order_when_invalid_fail_not_same_totalAmount(){
             List<OrderDetail> orderItem = new ArrayList<>();
             orderItem.add(new OrderDetail("A0001", 2L, BigDecimal.valueOf(10000)));
 
             CoreException response = assertThrows(CoreException.class, () -> {
-                Order order = new Order("ABCV1234", "utlee", OrderStatus.ORDER_SUBMIT, BigDecimal.valueOf(10000), orderItem);
+                Order order = Order.createOrder("user", orderItem, null, BigDecimal.valueOf(100000));
             });
 
             assertThat(response.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
-            assertThat(response.getMessage()).isEqualTo("주문하려는 총금액과 상품가격이 상이합니다");
+            assertThat(response.getMessage()).isEqualTo("쿠폰이 정상 적용되지 않았습니다");
         }
     }
 }

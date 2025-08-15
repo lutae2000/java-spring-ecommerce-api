@@ -5,11 +5,13 @@ import jakarta.persistence.Transient;
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 public class ProductInfo {
 
     private String code;
@@ -22,8 +24,7 @@ public class ProductInfo {
     private String category1;
     private String category2;
     private String category3;
-    private boolean useYn;
-    private Long likes;
+    private Long likeCount;
 
     public static ProductInfo from(Product product){
         return new ProductInfo(
@@ -33,12 +34,11 @@ public class ProductInfo {
             product.getQuantity(),
             product.getImgURL(),
             product.getDescription(),
-            product.getBrandCode(),
+            product.getBrand() != null ? product.getBrand() : null,
             product.getCategory1(),
             product.getCategory2(),
             product.getCategory3(),
-            product.isUseYn(),
-            product.getLikes()
+            0L
         );
     }
 }

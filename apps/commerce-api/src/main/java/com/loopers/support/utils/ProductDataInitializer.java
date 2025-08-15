@@ -24,7 +24,7 @@ public class ProductDataInitializer implements CommandLineRunner {
         if (productRepository.count() == 0) { // 데이터 없는 경우만
             List<Product> products = new ArrayList<>();
 
-            for (int i = 1; i <= 100_000; i++) {
+            for (int i = 1; i <= 1_000_000; i++) {
                 Product product = Product.builder()
                     .code("P" + i)
                     .name("Product " + i)
@@ -32,18 +32,17 @@ public class ProductDataInitializer implements CommandLineRunner {
                     .quantity((long) (i % 500))
                     .imgURL("https://example.com/image" + i + ".jpg")
                     .description("Description for product " + i)
-                    .brandCode("B" + (i % 50))
+                    .brand("B" + (i % 50))
                     .category1("Category1_" + (i % 10))
                     .category2("Category2_" + (i % 20))
                     .category3("Category3_" + (i % 30))
                     .useYn(true)
-                    .likes(0L)
                     .build();
 
                 products.add(product);
 
-                // 1000개씩 나눠서 saveAll() 호출 → 메모리 절약
-                if (products.size() % 1000 == 0) {
+                // 5000개씩 나눠서 saveAll() 호출 → 메모리 절약
+                if (products.size() % 5000 == 0) {
                     productRepository.saveAll(products);
                     products.clear();
                 }
@@ -54,7 +53,7 @@ public class ProductDataInitializer implements CommandLineRunner {
                 productRepository.saveAll(products);
             }
 
-            System.out.println("✅ 10만 건 데이터 생성 완료");
+            System.out.println("✅ 100만 건 데이터 생성 완료");
         }
     }
 }

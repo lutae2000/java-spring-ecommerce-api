@@ -1,9 +1,16 @@
 package com.loopers.domain.product;
 
+
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface ProductRepository {
 
+    /**
+     * 비관락 Product 조회
+     */
+    public Product findProductForUpdate(String productId);
 
     /**
      * Product 조회
@@ -11,9 +18,12 @@ public interface ProductRepository {
     public Product findProduct(String productId);
 
     /**
-     * Product 삭제
+     * 삼품목록 조회
+     * @param brandCode
+     * @param pageable
+     * @return
      */
-    public void deleteProduct(String productId);
+    Page<Product> findProductListByBrandCode(String brandCode, Pageable pageable);
 
     /**
      * Product 생성

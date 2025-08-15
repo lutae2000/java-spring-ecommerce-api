@@ -1,10 +1,11 @@
 package com.loopers.infrastructure.product;
 
 import com.loopers.domain.product.Product;
-import com.loopers.domain.product.ProductInfo;
 import com.loopers.domain.product.ProductRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -13,13 +14,18 @@ public class ProductRepositoryImpl implements ProductRepository {
     private final ProductJPARepository productJPARepository;
 
     @Override
-    public Product findProduct(String productId) {
-        return productJPARepository.findProductByCode(productId);
+    public Product findProductForUpdate(String productId) {
+        return productJPARepository.findProductByCodeForUpdate(productId);
     }
 
     @Override
-    public void deleteProduct(String productId) {
-//        productJPARepository.delete(productId);
+    public Product findProduct(String productId) {
+        return productJPARepository.findByCode(productId);
+    }
+
+    @Override
+    public Page<Product> findProductListByBrandCode(String brandCode, Pageable pageable) {
+        return productJPARepository.findProductListByBrandCode(brandCode, pageable);
     }
 
     @Override
@@ -31,10 +37,11 @@ public class ProductRepositoryImpl implements ProductRepository {
     @Override
     public void orderProduct(String productId, Long quantity) {
 
-        Product product = productJPARepository.findProductByCode(productId);
+        Product product = productJPARepository.findProductByCodeForUpdate(productId);
         product.setQuantity(product.getQuantity() - quantity);
         productJPARepository.save(product);
     }
+
 
     @Override
     public void saveAll(List<Product> products) {

@@ -1,40 +1,33 @@
 package com.loopers.domain.product;
 
+import com.loopers.application.product.ProductCriteria;
 import com.loopers.domain.brand.Brand;
-import jakarta.persistence.Transient;
 import java.math.BigDecimal;
 import lombok.Builder;
+import org.hibernate.query.Page;
 
-public class ProductCommand {
-    private String code;
-    private String name;
-    private BigDecimal price;
-    private int quantity;
-    private String imgURL;
-    private String description;
-    @Transient
-    private String brandCode;
-    private String category1;
-    private String category2;
-    private String category3;
-    private boolean useYn;
-    private Long likes;
+public record ProductCommand (
+    String code,
+    String name,
+    BigDecimal price,
+    Long quantity,
+    String imgURL,
+    String description,
+    String brandCode,
+    String category1,
+    String category2,
+    String category3,
+    SortBy sortBy,
+    int page,
+    int size
+){
+    public static Product toProduct(ProductCommand productCommand){
+        return Product.from(productCommand);
+    }
 
-    public static ProductInfo from(Product product){
-        return new ProductInfo(
-            product.getCode(),
-            product.getName(),
-            product.getPrice(),
-            product.getQuantity(),
-            product.getImgURL(),
-            product.getBrandCode(),
-            product.getCategory1(),
-            product.getCategory2(),
-            product.getCategory3(),
-            product.getDescription(),
-            product.isUseYn(),
-            product.getLikes()
-        );
+    // Brand 객체가 필요한 경우를 위한 메서드 추가
+    public static Product toProductWithBrand(ProductCommand productCommand){
+        return Product.from(productCommand);
     }
 
     @Builder
@@ -44,9 +37,4 @@ public class ProductCommand {
         }
     }
 
-    public record Search(
-        SortBy sortBy,
-        int page,
-        int size
-    ){}
 }
