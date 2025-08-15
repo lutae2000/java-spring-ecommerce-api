@@ -6,6 +6,7 @@ import com.loopers.domain.like.LikeService;
 import com.loopers.domain.like.LikeSummary;
 import com.loopers.domain.product.ProductCommand;
 import com.loopers.domain.product.ProductInfo;
+import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.product.SortBy;
 import com.loopers.support.error.CoreException;
@@ -25,6 +26,7 @@ public class ProductFacade {
     private final ProductService productService;
     private final LikeService likeService;
     private final BrandService brandService;
+    private final ProductRepository productRepository;
 
     /**
      * 물품 단건 조회
@@ -40,10 +42,15 @@ public class ProductFacade {
 
     /**
      * 물품 생성
-     * @param criteria
+     * @param productCriteria
      */
-    public void createProduct(ProductCriteria criteria){
-        ProductCommand productCommand = ProductCriteria.toCommand(criteria);
+    public void createProduct(ProductCriteria productCriteria){
+        // 중복 코드 체크 - ProductRepository 직접 사용
+        if (productRepository.findProduct(productCriteria.code()) != null) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "이미 존재하는 상품 코드입니다");
+        }
+        
+        ProductCommand productCommand = ProductCriteria.toCommand(productCriteria);
         productService.createProduct(productCommand);
     }
 
@@ -58,7 +65,24 @@ public class ProductFacade {
             ProductCriteria.toPageable(productCriteria)
         );
 
-        enrichProductPageWithLikeSummary(productPageResult.getProducts(), productCriteria.sortBy());
+        List<ProductInfo> enrichedAndSortedProducts = enrichProductPageWithLikeSummary(
+            productPageResult.getProducts(), 
+            productCriteria.sortBy()
+        );
+        
+        // 정렬된 리스트를 ProductPageResult에 설정
+        productPageResult = ProductPageResult.builder()
+            .products(enrichedAndSortedProducts)
+            .page(productPageResult.getPage())
+            .size(productPageResult.getSize())
+            .totalElements(productPageResult.getTotalElements())
+            .totalPages(productPageResult.getTotalPages())
+            .hasNext(productPageResult.isHasNext())
+            .hasPrevious(productPageResult.isHasPrevious())
+            .isFirst(productPageResult.isFirst())
+            .isLast(productPageResult.isLast())
+            .build();
+            
         return productPageResult;
     }
 
@@ -74,7 +98,7 @@ public class ProductFacade {
             // Null 체크
             if (productInfos == null || productInfos.isEmpty()) {
                 log.debug("정렬할 상품이 없습니다");
-                throw new CoreException(ErrorType.NOT_FOUND, "정렬할 상품이 없습니다");
+                return new ArrayList<>(); // 빈 리스트 반환 (예외 대신)
             }
 
             List<String> productCodes = productInfos.stream()

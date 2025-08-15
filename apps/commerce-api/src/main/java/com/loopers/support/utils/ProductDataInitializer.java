@@ -24,7 +24,7 @@ public class ProductDataInitializer implements CommandLineRunner {
         if (productRepository.count() == 0) { // 데이터 없는 경우만
             List<Product> products = new ArrayList<>();
 
-            for (int i = 1; i <= 1_000_000; i++) {
+            for (int i = 1; i <= 100; i++) {
                 Product product = Product.builder()
                     .code("P" + i)
                     .name("Product " + i)

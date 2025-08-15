@@ -19,6 +19,13 @@ public interface LikeSummaryRepository {
     LikeSummary likeSummaryByProductId(String productId);
 
     /**
+     * Optimistic locking - 물품의 좋아요 카운팅 조회 (락 없음)
+     * @param productId
+     * @return
+     */
+    Optional<LikeSummary> likeSummaryByProductIdOptimistic(String productId);
+
+    /**
      * 물품의 좋아요 갯수 조회
      * @param productId
      * @return

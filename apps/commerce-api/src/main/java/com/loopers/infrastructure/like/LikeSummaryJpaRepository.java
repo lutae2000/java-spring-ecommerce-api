@@ -17,9 +17,9 @@ public interface LikeSummaryJpaRepository extends JpaRepository<LikeSummary, Lon
      * @param productId
      * @return
      */
-//    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select ls from LikeSummary ls where ls.productId = :productId")
-    Optional<LikeSummary> getLikeByProductId(@Param("productId") String productId);
+    Optional<LikeSummary> getLikeByProductIdForUpdate(@Param("productId") String productId);
 
     /**
      * 물품의 좋아요 갯수 조회
@@ -42,4 +42,10 @@ public interface LikeSummaryJpaRepository extends JpaRepository<LikeSummary, Lon
      */
     @Query("select ls from LikeSummary ls where ls.productId in :productCodes")
     List<LikeSummary> findByProductCodes(List<String> productCodes);
+
+    /**
+     * Optimistic locking - get LikeSummary by productId without lock
+     */
+    @Query("select ls from LikeSummary ls where ls.productId = :productId")
+    Optional<LikeSummary> getLikeByProductIdOptimistic(@Param("productId") String productId);
 }
