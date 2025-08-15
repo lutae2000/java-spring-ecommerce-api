@@ -3,7 +3,7 @@ package com.loopers.domain.brand;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.loopers.domain.point.PointEntity;
+import com.loopers.domain.point.Point;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;

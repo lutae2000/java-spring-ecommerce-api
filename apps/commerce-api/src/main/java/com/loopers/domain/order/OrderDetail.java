@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 @Entity
 @Table(name = "order_details")
@@ -30,29 +31,24 @@ public class OrderDetail extends BaseEntity {
     private BigDecimal unitPrice;
 
     public OrderDetail(String productId, Long quantity, BigDecimal unitPrice) {
+        validateOrderDetail(productId, quantity, unitPrice);
         this.productId = productId;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
-        validUnitPrice();
-        validQuantity();
     }
 
+    //Factory Method
+    public static OrderDetail CreateOrderDetail(String productId, Long quantity, BigDecimal unitPrice){
+        return new OrderDetail(productId, quantity, unitPrice);
+    }
 
-    /**
-     * 각 상품 가격
-     * @return
-     */
-    public void validUnitPrice(){
-
+    private void validateOrderDetail(String productId, Long quantity, BigDecimal unitPrice){
+        if(StringUtils.isEmpty(productId)){
+            throw new CoreException(ErrorType.BAD_REQUEST, "상품코드는 필수입니다");
+        }
         if(unitPrice.compareTo(BigDecimal.ZERO) < 0){   //가격 체크(가격은 무료일수도 있으니 음수값만 체크)
             throw new CoreException(ErrorType.BAD_REQUEST, "잘못된 주문가격 입니다");
         }
-    }
-
-    /**
-     * 수량 체크
-     */
-    public void validQuantity(){
         if(quantity.compareTo(0L) <= 0){  //수량 체크(수량은 반드시 1이상)
             throw new CoreException(ErrorType.BAD_REQUEST, "주문수량은 1개 이상이어야 합니다");
         }

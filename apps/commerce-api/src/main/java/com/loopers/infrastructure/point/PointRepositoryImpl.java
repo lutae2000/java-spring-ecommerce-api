@@ -1,6 +1,6 @@
 package com.loopers.infrastructure.point;
 
-import com.loopers.domain.point.PointEntity;
+import com.loopers.domain.point.Point;
 import com.loopers.domain.point.PointRepository;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -12,12 +12,18 @@ public class PointRepositoryImpl implements PointRepository {
     private final PointJPARepository pointJPARepository;
 
     @Override
-    public void save(PointEntity pointEntity) {
-        pointJPARepository.save(pointEntity);
+    public void save(Point Point) {
+        pointJPARepository.save(Point);
     }
 
     @Override
-    public Optional<PointEntity> findByUserId(String userId) {
-        return Optional.ofNullable(pointJPARepository.findByUserId(userId));
+    public Optional<Point> findByUserId(String userId) {
+        return pointJPARepository.findByUserId(userId);
     }
+
+    @Override
+    public void updatePoint(String userId, Long point) {
+        pointJPARepository.updatePoint(userId, point);
+    }
+
 }

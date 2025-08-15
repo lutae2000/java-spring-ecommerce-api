@@ -2,6 +2,7 @@ package com.loopers.interfaces.api.point;
 
 import com.loopers.domain.point.PointCommand;
 import com.loopers.domain.point.PointCommand.Create;
+import com.loopers.domain.point.Point;
 import com.loopers.domain.point.PointInfo;
 import com.loopers.domain.point.PointService;
 import com.loopers.interfaces.api.ApiResponse;
@@ -48,7 +49,7 @@ public class PointController {
 
         log.debug("::: getPointInfo ::: loginId: {}", loginId);
 
-        PointInfo pointInfo = pointService.getPointInfo(loginId);
+        Point pointInfo = pointService.getPointInfo(loginId);
 
         return ApiResponse.success(PointDto.Response.from(pointInfo));
     }
@@ -66,7 +67,8 @@ public class PointController {
 
         PointCommand.Create command = new Create(loginId, request.point);
 
-        PointInfo pointInfo = pointService.chargePoint(command);
-        return ApiResponse.success(PointDto.Response.from(pointInfo));
+/*        Point pointInfo = pointService.chargePoint(command);
+        return ApiResponse.success(PointDto.Response.from(pointInfo));*/
+        return null;
     }
 }

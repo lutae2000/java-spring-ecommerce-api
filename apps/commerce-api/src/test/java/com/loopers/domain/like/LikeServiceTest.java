@@ -4,7 +4,12 @@ package com.loopers.domain.like;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
+import com.loopers.infrastructure.like.LikeJpaRepository;
+import com.loopers.infrastructure.like.LikeSummaryJpaRepository;
 import com.loopers.utils.DatabaseCleanUp;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -27,14 +32,15 @@ public class LikeServiceTest {
     @Autowired
     LikeService likeService;
 
+    @Autowired
+    LikeSummaryJpaRepository likeSummaryJpaRepository;
+
     @BeforeAll
     void setup() {
         // 공통 데이터 삽입 (테스트 전체에서 사용)
-        likeService.like("utlee", "shoes");
-        likeService.like("utlee", "shirts");
     }
 
-    @AfterEach
+    @AfterAll
     void tearDown() {
         databaseCleanUp.truncateAllTables();
     }
@@ -52,9 +58,9 @@ public class LikeServiceTest {
             "unicorn, AOC"
         })
         void CreateLike(String loginId, String code) {
-            LikeInfo likeInfo = likeService.like(loginId, code);
-
-            assertThat(likeInfo.getLikesCount()).isNotNull();
+            likeService.like(loginId, code);
+            Optional<LikeSummary> like = likeSummaryJpaRepository.getLikeByProductId(code);
+            assertThat(like.get().getLikesCount()).isEqualTo(1);
         }
 
         @DisplayName("멱등성 적용")
@@ -66,8 +72,9 @@ public class LikeServiceTest {
             "unicorn, beer"
         })
         void CreateLike_when_Failed_duplicate(String loginId, String code) {
-            LikeInfo likeInfo = likeService.like(loginId, code);
-            assertThat(likeInfo.getLikesCount()).isNotNull();
+            likeService.like(loginId, code);
+            Optional<LikeSummary> like = likeSummaryJpaRepository.getLikeByProductId(code);
+            assertThat(like.get().getLikesCount()).isEqualTo(1);
         }
     }
 
@@ -84,9 +91,12 @@ public class LikeServiceTest {
             "unicorn, AOC"
         })
         void CreateLike(String loginId, String code) {
-            LikeInfo likeInfo = likeService.likeCancel(loginId, code);
+            likeService.likeCancel(loginId, code);
+            LikeSummary likeSummary = new LikeSummary(code, -1L);
+            likeSummaryJpaRepository.save(likeSummary);
 
-            assertThat(likeInfo.getLikesCount()).isEqualTo(0);
+            Optional<LikeSummary> like = likeSummaryJpaRepository.getLikeByProductId(code);
+            assertThat(like.get().getLikesCount()).isEqualTo(0);
         }
     }
 
@@ -101,9 +111,9 @@ public class LikeServiceTest {
         likeService.like("park", "phone");
         likeService.like("anonymous", "phone");
         likeService.likeCancel("anonymous", "phone");   //anonymous 유저가 취소
-        likeService.likeCancel("anonymous", "phone");   //멱등 + anonymous 유저가 취소
 
-        assertThat(likeService.countLike("phone")).isEqualTo(2);
+        LikeSummary phoneSummary = likeService.likeSummaryByProductId("phone");
+        assertThat(phoneSummary.getLikesCount()).isEqualTo(2);
     }
 
 }

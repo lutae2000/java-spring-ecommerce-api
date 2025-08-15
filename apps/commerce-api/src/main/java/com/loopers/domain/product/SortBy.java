@@ -3,14 +3,18 @@ package com.loopers.domain.product;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import java.util.Arrays;
+import org.apache.commons.lang3.StringUtils;
 
 public enum SortBy {
-    LATEST, LIKES_DESC, PRICE_ASC, PRICE_DESC;
+    LATEST, LIKE_DESC, PRICE_ASC, PRICE_DESC;
 
     public static SortBy from(String sort) {
+        if(StringUtils.isEmpty(sort)) {
+            return LIKE_DESC;
+        }
         return Arrays.stream(values())
-            .filter(s -> s.name().equalsIgnoreCase(sort))
+            .filter(array -> array.name().equalsIgnoreCase(sort))
             .findFirst()
-            .orElseThrow(() -> new CoreException(ErrorType.BAD_REQUEST, "지원하지 않는 정렬입니다"));
+            .orElse(LIKE_DESC);
     }
 }

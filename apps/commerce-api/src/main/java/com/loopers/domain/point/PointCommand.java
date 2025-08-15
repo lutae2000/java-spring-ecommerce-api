@@ -6,8 +6,8 @@ public class PointCommand {
     private Long point;
 
     public record Create(String userId, Long point) {
-        public PointEntity toPointEntity() {
-            return PointEntity.builder()
+        public Point toPoint() {
+            return Point.builder()
                 .userId(this.userId)
                 .point(this.point)
                 .build();

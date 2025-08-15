@@ -22,8 +22,6 @@ public class ProductInfo {
     private String category1;
     private String category2;
     private String category3;
-    private boolean useYn;
-    private Long likes;
 
     public static ProductInfo from(Product product){
         return new ProductInfo(
@@ -33,12 +31,10 @@ public class ProductInfo {
             product.getQuantity(),
             product.getImgURL(),
             product.getDescription(),
-            product.getBrandCode(),
+            product.getBrand() != null ? product.getBrand().getCode() : null, // 수정
             product.getCategory1(),
             product.getCategory2(),
-            product.getCategory3(),
-            product.isUseYn(),
-            product.getLikes()
+            product.getCategory3()
         );
     }
 }

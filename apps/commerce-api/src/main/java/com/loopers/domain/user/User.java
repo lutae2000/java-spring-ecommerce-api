@@ -37,7 +37,7 @@ public class User extends BaseEntity {
 
     @Builder
     public User(String userId, String email, String birthday, Gender gender) {
-        userIdValid(userId);
+
         emailValid(email);
         birthdayValid(birthday);
         genderValid(gender);
@@ -47,14 +47,7 @@ public class User extends BaseEntity {
         this.gender = gender;
     }
 
-    private void userIdValid(String userId){
-        if(StringUtils.isEmpty(userId)){
-            throw new CoreException(ErrorType.BAD_REQUEST, "userId 값은 필수입니다");
-        }
-        if(!userId.matches("^[a-zA-Z0-9]{1,10}$")){
-            throw new CoreException(ErrorType.BAD_REQUEST, "userId는 영문 대/소문자와 숫자만 가능하며 10자 이내만 가능합니다");
-        }
-    }
+
 
     private void emailValid(String email){
         if(StringUtils.isEmpty(email)){

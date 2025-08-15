@@ -4,7 +4,9 @@ import java.util.Optional;
 
 public interface PointRepository {
 
-    void save(PointEntity pointEntity);
+    void save(Point Point);
 
-    Optional<PointEntity> findByUserId(String userId);
+    Optional<Point> findByUserId(String userId);
+
+    void updatePoint(String userId, Long point);
 }

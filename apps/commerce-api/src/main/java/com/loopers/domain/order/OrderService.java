@@ -1,16 +1,17 @@
 package com.loopers.domain.order;
 
-import com.loopers.domain.BaseEntity;
+
 import com.loopers.domain.domainEnum.OrderStatus;
-import com.loopers.domain.order.OrderDetailCommand.orderItem;
+import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorType;
 import com.loopers.support.utils.StringUtil;
-import jakarta.transaction.Transactional;
+
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -18,16 +19,27 @@ import org.springframework.stereotype.Service;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderDetailRepository orderDetailRepository;
 
     @Transactional
-    public OrderInfo placeOrder(String userId, BigDecimal totalAmount, List<orderItem> orderItems){
-        String orderNo = StringUtil.generateCode(7);
-        List<OrderDetail> details = orderItems.stream()
-            .map(item -> new OrderDetail(item.productId(), item.quantity(), item.unitPrice()))
-            .collect(Collectors.toList());
+    public OrderInfo placeOrder(String userId, Order order, BigDecimal discountPrice){
 
-        Order order = new Order(orderNo, userId, OrderStatus.ORDER_SUBMIT,totalAmount, details);
         orderRepository.save(order);
+        orderDetailRepository.OrderDetailSave(order.getOrderDetailList());
+
+        log.info("주문이 생성되었습니다. 주문번호: {}, 사용자: {}", order.getOrderNo(), userId);
         return OrderInfo.of(order);
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderInfo> findAllOrderByUserId(String userId){
+        return orderRepository.findAllOrderByUserId(userId).stream()
+            .map(OrderInfo::of)
+            .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public OrderInfo findOrderInfoByOrderNo(String userId, String orderNo){
+        return OrderInfo.of(orderRepository.findByOrderNo(userId, orderNo).orElseThrow());
     }
 }

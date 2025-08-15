@@ -59,7 +59,7 @@ public class PointServiceTest {
             //when
             UserInfo user = userService.createUserId(command);
 
-            PointInfo pointInfo =  pointService.getPointInfo(user.getUserId());
+            Point pointInfo =  pointService.getPointInfo(user.getUserId());
 
             //then
             assertAll(
@@ -74,7 +74,7 @@ public class PointServiceTest {
 
             //when
             CoreException response = assertThrows(CoreException.class, () -> {
-                PointInfo pointInfo = pointService.getPointInfo("not_exists_loginId");
+                Point pointInfo = pointService.getPointInfo("not_exists_loginId");
             });
 
             //then

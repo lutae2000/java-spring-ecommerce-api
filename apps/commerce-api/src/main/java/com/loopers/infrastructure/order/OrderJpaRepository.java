@@ -1,8 +1,10 @@
 package com.loopers.infrastructure.order;
 
 import com.loopers.domain.order.Order;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 public interface OrderJpaRepository extends JpaRepository<Order, Long> {
     /**
@@ -15,5 +17,14 @@ public interface OrderJpaRepository extends JpaRepository<Order, Long> {
     /**
      * 주문서 조회
      */
-    Optional<Order> findByOrderNo(String orderNo);
+    @Query("SELECT o FROM Order o WHERE o.userId = :userId AND o.orderNo = :orderNo")
+    Optional<Order> findByOrderNo(String userId, String orderNo);
+
+    /**
+     * 특정 회원이 주문한 모든 주문서
+     * @param userId
+     * @return
+     */
+    @Query("SELECT o FROM Order o WHERE o.userId = :userId")
+    List<Order> findAllByUserId(String userId);
 }

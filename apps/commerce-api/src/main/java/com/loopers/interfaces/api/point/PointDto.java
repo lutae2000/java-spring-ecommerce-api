@@ -1,6 +1,6 @@
 package com.loopers.interfaces.api.point;
 
-import com.loopers.domain.point.PointEntity;
+import com.loopers.domain.point.Point;
 import com.loopers.domain.point.PointInfo;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,7 +30,7 @@ public class PointDto {
         public String loginId;
         public Long point;
 
-        public static Response from(PointInfo pointInfo){
+        public static Response from(Point pointInfo){
             return new Response(pointInfo.getUserId(), pointInfo.getPoint());
         }
     }
