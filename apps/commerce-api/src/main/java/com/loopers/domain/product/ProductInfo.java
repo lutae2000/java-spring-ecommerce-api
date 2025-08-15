@@ -31,7 +31,7 @@ public class ProductInfo {
             product.getQuantity(),
             product.getImgURL(),
             product.getDescription(),
-            product.getBrandCode(),
+            product.getBrand() != null ? product.getBrand().getCode() : null, // 수정
             product.getCategory1(),
             product.getCategory2(),
             product.getCategory3()

@@ -3,8 +3,10 @@ package com.loopers.domain.product;
 import com.loopers.domain.BaseEntity;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +25,7 @@ public class ProductService {
     }
 
     /**
-     * product 조회
+     * 물품 상세 조회
      */
     @Transactional(readOnly = true)
     public ProductInfo findProduct(String productId){
@@ -35,16 +37,6 @@ public class ProductService {
         return ProductInfo.from(product);
     }
 
-    /**
-     * product 삭제
-     */
-    @Transactional
-    public void deleteProduct(String productId){
-        if(findProduct(productId) == null){
-            throw new CoreException(ErrorType.NOT_FOUND, "삭제하려는 물품코드가 없습니다");
-        }
-        productRepository.deleteProduct(productId);
-    }
 
     @Transactional
     public void orderedStock(String productId, Long quantity){

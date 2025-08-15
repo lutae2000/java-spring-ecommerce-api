@@ -17,36 +17,13 @@ public record ProductCommand (
     String category2,
     String category3
 ){
-    public static ProductInfo from(Product product){
-        return new ProductInfo(
-            product.getCode(),
-            product.getName(),
-            product.getPrice(),
-            product.getQuantity(),
-            product.getImgURL(),
-            product.getDescription(),
-            product.getBrandCode(),
-            product.getCategory1(),
-            product.getCategory2(),
-            product.getCategory3()
-        );
+    public static Product toProduct(ProductCommand productCommand){
+        return Product.from(productCommand);
     }
 
-    public static Product toProduct(ProductCommand productCommand){
-        return new Product(
-            productCommand.code(),
-            productCommand.name(),
-            productCommand.price(),
-            productCommand.quantity(),
-            productCommand.imgURL(),
-            productCommand.description(),
-            productCommand.brandCode(),
-            productCommand.category1(),
-            productCommand.category2(),
-            productCommand.category3(),
-            true,
-            0L
-        );
+    // Brand 객체가 필요한 경우를 위한 메서드 추가
+    public static Product toProductWithBrand(ProductCommand productCommand, Brand brand){
+        return Product.from(productCommand, brand);
     }
 
     @Builder
@@ -56,9 +33,4 @@ public record ProductCommand (
         }
     }
 
-    public record Search(
-        SortBy sortBy,
-        int page,
-        int size
-    ){}
 }

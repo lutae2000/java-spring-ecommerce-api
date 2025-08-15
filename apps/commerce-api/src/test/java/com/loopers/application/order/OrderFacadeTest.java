@@ -75,27 +75,33 @@ public class OrderFacadeTest {
          PointCommand.Create pointCommand = new PointCommand.Create("utlee", 10000L);
          pointService.chargePoint(pointCommand);
 
-        Product product1 = Product.builder()
-            .code("A0001")
-            .brandCode("B0001")
-            .price(BigDecimal.valueOf(1000))
-            .name("테스트 물품")
-            .quantity(10L)
-            .category1("ELECTRIC")
-            .useYn(true)
-            .build();
+        // Product 생성 방식 수정
+        Product product1 = Product.create(
+            "A0001",
+            "테스트 물품1",
+            BigDecimal.valueOf(1000),
+            10L,
+            "image1.jpg",
+            "테스트 물품1 설명",
+            "ELECTRIC",
+            "컴퓨터",
+            "노트북"
+        );
         productRepository.save(product1);
 
-        Product product2 = Product.builder()
-            .code("A0002")
-            .brandCode("B0001")
-            .price(BigDecimal.valueOf(2000))
-            .quantity(10L)
-            .name("테스트 물품")
-            .category1("ELECTRIC")
-            .useYn(true)
-            .build();
+        Product product2 = Product.create(
+            "A0002",
+            "테스트 물품2",
+            BigDecimal.valueOf(2000),
+            10L,
+            "image2.jpg",
+            "테스트 물품2 설명",
+            "ELECTRIC",
+            "컴퓨터",
+            "데스크톱"
+        );
         productRepository.save(product2);
+
 
         Coupon coupon = Coupon.builder()
             .eventId("ABC")
