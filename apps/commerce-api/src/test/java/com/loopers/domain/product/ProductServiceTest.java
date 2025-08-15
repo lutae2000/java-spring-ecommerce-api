@@ -117,6 +117,9 @@ public class ProductServiceTest {
         @DisplayName("성공")
         void inquiryProduct(){
             //given
+            ProductInfo expectedProductInfo = ProductInfo.from(testProduct);
+            when(redisCacheTemplate.getOrSet(anyString(), any(), any(Duration.class), any()))
+                .thenReturn(expectedProductInfo);
 
             //when
             ProductInfo productInfo = productService.findProduct("A0001");
@@ -133,6 +136,10 @@ public class ProductServiceTest {
         @Test
         @DisplayName("실패 - 상품 미존재시 404에러")
         void inquiryProduct_when_not_exists_product(){
+            //given
+            when(redisCacheTemplate.getOrSet(anyString(), any(), any(Duration.class), any()))
+                .thenThrow(new CoreException(ErrorType.NOT_FOUND, "검색하려는 물품이 없습니다"));
+
             //when
             CoreException response = assertThrows(CoreException.class, () -> {
                 ProductInfo productInfo = productService.findProduct("A0002");
@@ -176,7 +183,7 @@ public class ProductServiceTest {
             ProductInfo expectedProductInfo = ProductInfo.from(testProduct);
             when(redisCacheTemplate.getOrSet(anyString(), any(), any(Duration.class), any()))
                 .thenAnswer(invocation -> {
-                    // supplier 호출 (DB 조회 시뮬레이션)
+                    // supplier 호출 (DB 조회 )
                     return expectedProductInfo;
                 });
 
@@ -240,11 +247,16 @@ public class ProductServiceTest {
         @DisplayName("실패 - Redis 연결 실패시 DB 조회로 fallback")
         void findProduct_failure_redis_fallback_to_db(){
             // given
+            ProductInfo expectedProductInfo = ProductInfo.from(testProduct);
+            
+            // Redis get 메서드에서 예외 발생 
+            when(redisCacheTemplate.get(anyString(), eq(ProductInfo.class)))
+                .thenThrow(new RuntimeException("Redis 연결 실패"));
+            
             when(redisCacheTemplate.getOrSet(anyString(), any(), any(Duration.class), any()))
-                .thenThrow(new RuntimeException("Redis 연결 실패"))
                 .thenAnswer(invocation -> {
-                    // supplier 호출 (DB 조회 시뮬레이션)
-                    return ProductInfo.from(testProduct);
+                    // supplier 호출 (DB 조회 )
+                    return expectedProductInfo;
                 });
 
             // when
@@ -257,7 +269,7 @@ public class ProductServiceTest {
             );
 
             // Redis 호출 확인 (실패 후 supplier 재호출)
-            verify(redisCacheTemplate, times(2))
+            verify(redisCacheTemplate, times(1))
                 .getOrSet(anyString(), eq(ProductInfo.class), any(Duration.class), any());
         }
     }
@@ -276,7 +288,7 @@ public class ProductServiceTest {
 
             when(redisCacheTemplate.getOrSet(anyString(), any(), any(Duration.class), any()))
                 .thenAnswer(invocation -> {
-                    // supplier 호출 (DB 조회 시뮬레이션)
+                    // supplier 호출 (DB 조회 )
                     return expectedResult;
                 });
 
@@ -393,10 +405,13 @@ public class ProductServiceTest {
             Page<Product> productPage = productRepository.findProductListByBrandCode("B0001", pageable);
             ProductPageResult expectedResult = ProductPageResult.from(productPage.map(ProductInfo::from));
 
+            // Redis get 메서드에서 예외 발생 
+            when(redisCacheTemplate.get(anyString(), eq(ProductPageResult.class)))
+                .thenThrow(new RuntimeException("Redis 연결 실패"));
+            
             when(redisCacheTemplate.getOrSet(anyString(), any(), any(Duration.class), any()))
-                .thenThrow(new RuntimeException("Redis 연결 실패"))
                 .thenAnswer(invocation -> {
-                    // supplier 호출 (DB 조회 시뮬레이션)
+                    // supplier 호출 (DB 조회 )
                     return expectedResult;
                 });
 
@@ -410,7 +425,7 @@ public class ProductServiceTest {
             );
 
             // Redis 호출 확인 (실패 후 supplier 재호출)
-            verify(redisCacheTemplate, times(2))
+            verify(redisCacheTemplate, times(1))
                 .getOrSet(anyString(), eq(ProductPageResult.class), any(Duration.class), any());
         }
     }

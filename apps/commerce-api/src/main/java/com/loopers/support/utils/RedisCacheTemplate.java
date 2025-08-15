@@ -41,12 +41,16 @@ public class RedisCacheTemplate {
             if (value != null) {
                 log.debug("Setting cache - key: {}, value type: {}", key, value.getClass().getSimpleName());
 
-                // 3. 캐시 저장 시도
-                boolean cacheSet = set(key, value, ttl);
-                if (cacheSet) {
-                    log.debug("Cache set successfully for key: {}", key);
-                } else {
-                    log.warn("Failed to set cache for key: {}", key);
+                // 3. 캐시 저장 시도 (실패해도 서비스는 정상 동작)
+                try {
+                    boolean cacheSet = set(key, value, ttl);
+                    if (cacheSet) {
+                        log.debug("Cache set successfully for key: {}", key);
+                    } else {
+                        log.warn("Failed to set cache for key: {}", key);
+                    }
+                } catch (Exception cacheException) {
+                    log.warn("Cache set failed for key: {}, but continuing with service: {}", key, cacheException.getMessage());
                 }
             } else {
                 log.warn("Supplier returned null for key: {}", key);
@@ -56,7 +60,8 @@ public class RedisCacheTemplate {
 
         } catch (Exception e) {
             log.error("Cache operation failed for key: {}, error: {}", key, e.getMessage(), e);
-            // 캐시 실패 시에도 서비스는 정상 동작
+            // 캐시 실패 시에도 서비스는 정상 동작 - supplier 호출
+            log.info("Falling back to supplier due to cache failure for key: {}", key);
             try {
                 return supplier.get();
             } catch (Exception supplierException) {
