@@ -2,7 +2,9 @@ rootProject.name = "ecommerce-api"
 
 include(
     ":apps:commerce-api",
+    ":apps:pg-simulator",
     ":modules:jpa",
+    ":modules:redis",
     ":supports:jackson",
     ":supports:logging",
     ":supports:monitoring",
@@ -28,4 +30,4 @@ pluginManagement {
         }
     }
 }
-include("apps:pg-simulator")
+ 
