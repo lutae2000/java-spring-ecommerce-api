@@ -28,3 +28,4 @@ pluginManagement {
         }
     }
 }
+include("apps:pg-simulator")
