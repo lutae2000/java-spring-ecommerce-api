@@ -1,0 +1,6 @@
+feign:
+  client:
+    config:
+      default: # 모든 FeignClient에 적용
+        connectTimeout: 5000   # 연결 타임아웃 (ms)
+        readTimeout: 10000     # 응답 타임아웃 (ms)
