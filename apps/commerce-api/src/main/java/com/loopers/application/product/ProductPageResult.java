@@ -1,5 +1,6 @@
 package com.loopers.application.product;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.loopers.domain.product.ProductInfo;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Page;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ProductPageResult {
     private List<ProductInfo> products;
     private int page;

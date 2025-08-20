@@ -1,5 +1,6 @@
 package com.loopers.domain.product;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.loopers.domain.brand.Brand;
 import jakarta.persistence.Transient;
 import java.math.BigDecimal;
@@ -12,6 +13,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ProductInfo {
 
     private String code;

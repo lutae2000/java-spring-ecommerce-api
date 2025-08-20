@@ -62,6 +62,7 @@ public class ProductFacade {
     public ProductPageResult getProductList(ProductCriteria productCriteria){
         ProductPageResult productPageResult = productService.findProductListByBrandCode(
             productCriteria.brandCode(),
+            productCriteria.sortBy(),
             ProductCriteria.toPageable(productCriteria)
         );
 
@@ -116,10 +117,6 @@ public class ProductFacade {
                 }
             });
 
-            // 정렬 적용
-            if(sortBy != null){
-                return sortProductInfos(productInfos, sortBy);
-            }
 
             return productInfos;
         } catch (Exception e) {
@@ -128,54 +125,4 @@ public class ProductFacade {
         }
     }
 
-    /**
-     * ProductInfo 리스트를 정렬
-     * @param productInfos
-     * @param sortBy
-     */
-    private List<ProductInfo> sortProductInfos(List<ProductInfo> productInfos, SortBy sortBy) {
-
-        List<ProductInfo> sortedList = new ArrayList<>(productInfos);
-
-        switch (sortBy) {
-            case LIKE_DESC:
-                sortedList.sort(Comparator.comparing(
-                    ProductInfo::getLikeCount,
-                    Comparator.nullsLast(Comparator.reverseOrder())
-                ));
-                break;
-            case LIKE_ASC:
-                sortedList.sort(Comparator.comparing(
-                    ProductInfo::getLikeCount,
-                    Comparator.nullsLast(Comparator.naturalOrder())
-                ));
-                break;
-            case PRICE_ASC:
-                sortedList.sort(Comparator.comparing(
-                    ProductInfo::getPrice,
-                    Comparator.nullsLast(Comparator.naturalOrder())
-                ));
-                break;
-            case PRICE_DESC:
-                sortedList.sort(Comparator.comparing(
-                    ProductInfo::getPrice,
-                    Comparator.nullsLast(Comparator.reverseOrder())
-                ));
-                break;
-            case LATEST:
-                // 최신순 정렬 (생성일 기준, ProductInfo에 createdAt 필드가 있다면)
-                // sortedList.sort(Comparator.comparing(ProductInfo::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())));
-                // 현재는 기본 순서 유지
-
-                break;
-            default:
-                // 기본값은 좋아요 내림차순
-                sortedList.sort(Comparator.comparing(
-                    ProductInfo::getLikeCount,
-                    Comparator.nullsLast(Comparator.reverseOrder())
-                ));
-                break;
-        }
-        return sortedList;
-    }
 }

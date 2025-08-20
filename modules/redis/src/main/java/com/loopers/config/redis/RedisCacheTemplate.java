@@ -1,4 +1,4 @@
-package com.loopers.support.utils;
+package com.loopers.config.redis;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
