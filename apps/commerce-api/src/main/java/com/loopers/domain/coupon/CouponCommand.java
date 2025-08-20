@@ -18,7 +18,7 @@ public record CouponCommand (
     }
 
     // Brand 객체가 필요한 경우를 위한 메서드 추가
-    public static Product toProductWithBrand(ProductCommand productCommand, Brand brand){
-        return Product.from(productCommand, brand);
+    public static Product toProductWithBrand(ProductCommand productCommand){
+        return Product.from(productCommand);
     }
 }

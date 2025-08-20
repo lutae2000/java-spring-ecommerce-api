@@ -66,7 +66,7 @@ public class LikeConcurrenTest {
         //물품 생성
         Product product = Product.builder()
             .code("A0001")
-            .brandCode("B0001")
+            .brand("B0001")
             .price(BigDecimal.valueOf(1000))
             .name("테스트 물품")
             .category1("ELECTRIC")

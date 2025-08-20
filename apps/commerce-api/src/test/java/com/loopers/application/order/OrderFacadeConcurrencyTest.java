@@ -74,7 +74,7 @@ public class OrderFacadeConcurrencyTest {
 
         Product product1 = Product.builder()
             .code("A0001")
-            .brandCode("B0001")
+            .brand("B0001")
             .price(BigDecimal.valueOf(1000))
             .name("테스트 물품")
             .quantity(1000L)
@@ -85,7 +85,7 @@ public class OrderFacadeConcurrencyTest {
 
         Product product2 = Product.builder()
             .code("A0002")
-            .brandCode("B0001")
+            .brand("B0001")
             .price(BigDecimal.valueOf(2000))
             .quantity(1000L)
             .name("테스트 물품")

@@ -6,7 +6,7 @@ import java.util.Arrays;
 import org.apache.commons.lang3.StringUtils;
 
 public enum SortBy {
-    LATEST, LIKE_DESC, PRICE_ASC, PRICE_DESC;
+    LATEST, LIKE_ASC, LIKE_DESC, PRICE_ASC, PRICE_DESC;
 
     public static SortBy from(String sort) {
         if(StringUtils.isEmpty(sort)) {

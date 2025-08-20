@@ -36,4 +36,8 @@ public record ProductResult (
             likes
         );
     }
+
+    public static ProductResult of(ProductInfo productInfo){
+        return of(productInfo, null, productInfo.getLikeCount());
+    }
 }

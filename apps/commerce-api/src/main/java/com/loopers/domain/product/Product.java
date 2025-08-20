@@ -1,13 +1,9 @@
 package com.loopers.domain.product;
 
 import com.loopers.domain.BaseEntity;
-import com.loopers.domain.brand.Brand;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
@@ -33,9 +29,7 @@ public class Product extends BaseEntity {
     private String imgURL;
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "brand_code")
-    private Brand brand;
+    private String brand;
 
     private String category1;
     private String category2;
@@ -66,9 +60,8 @@ public class Product extends BaseEntity {
     /**
      * ProductCommand와 Brand로부터 Product 생성
      */
-    public static Product from(ProductCommand productCommand, Brand brand) {
+    public static Product from(ProductCommand productCommand, String brand) {
         validateProductCommand(productCommand);
-        validateBrand(brand);
 
         return Product.builder()
             .code(productCommand.code())
@@ -112,10 +105,9 @@ public class Product extends BaseEntity {
      * Brand와 함께 Product 생성
      */
     public static Product createWithBrand(String code, String name, BigDecimal price, Long quantity,
-        String imgURL, String description, Brand brand,
+        String imgURL, String description, String brand,
         String category1, String category2, String category3) {
         validateBasicInfo(code, name, price, quantity);
-        validateBrand(brand);
 
         return Product.builder()
             .code(code)
@@ -181,25 +173,6 @@ public class Product extends BaseEntity {
         if (quantity < 0) {
             throw new CoreException(ErrorType.BAD_REQUEST, "상품의 수량은 0보다 커야합니다");
         }
-    }
-
-    private static void validateBrand(Brand brand) {
-        if (brand == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "Brand는 null일 수 없습니다");
-        }
-        if (StringUtils.isEmpty(brand.getCode())) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "Brand 코드는 필수입니다");
-        }
-    }
-
-    // ===== 비즈니스 메소드들 =====
-
-    /**
-     * Brand 설정
-     */
-    public void setBrand(Brand brand) {
-        validateBrand(brand);
-        this.brand = brand;
     }
 
 
