@@ -29,5 +29,3 @@ pluginManagement {
         }
     }
 }
-include("modules:redis")
-findProject(":modules:redis")?.name = "redis"
