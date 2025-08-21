@@ -1,0 +1,39 @@
+resilience4j:
+  circuitbreaker:
+    instances:
+      paymentService:
+        # 서킷브레이커가 열리는 조건 (50% 실패율)
+        failure-rate-threshold: 50
+        # 최소 요청 수 (10개 요청 후 실패율 계산)
+        minimum-number-of-calls: 10
+        # 슬라이딩 윈도우 크기 (100개 요청을 기준으로 실패율 계산)
+        sliding-window-size: 100
+        # 슬라이딩 윈도우 타입 (카운트 기반)
+        sliding-window-type: count_based
+        # 서킷브레이커가 열린 후 대기 시간 (30초)
+        wait-duration-in-open-state: 30s
+        # 반열림 상태에서 허용할 요청 수
+        permitted-number-of-calls-in-half-open-state: 5
+        # 느린 호출을 실패로 간주할 시간 (5초)
+        slow-call-duration-threshold: 5s
+        # 느린 호출 비율 임계값 (50%)
+        slow-call-rate-threshold: 50
+        # 예외를 실패로 간주할지 여부
+        record-exceptions:
+          - java.lang.Exception
+        # 예외를 실패로 간주하지 않을 예외들
+        ignore-exceptions:
+          - com.loopers.support.error.CoreException
+  retry:
+    instances:
+      paymentService:
+        # 최대 재시도 횟수
+        max-attempts: 3
+        # 재시도 간 대기 시간
+        wait-duration: 1s
+        # 재시도할 예외들
+        retry-exceptions:
+          - java.lang.Exception
+        # 재시도하지 않을 예외들
+        ignore-exceptions:
+          - com.loopers.support.error.CoreException
