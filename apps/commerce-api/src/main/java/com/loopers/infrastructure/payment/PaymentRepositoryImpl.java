@@ -29,7 +29,7 @@ public class PaymentRepositoryImpl implements PaymentRepository {
      */
     @Override
     public Payment findByTransactionKey(String transactionKey){
-        return paymentJpaRepository.getReferenceById(transactionKey);
+        return paymentJpaRepository.findByTransactionKey(transactionKey);
     }
 
     /**
@@ -38,7 +38,7 @@ public class PaymentRepositoryImpl implements PaymentRepository {
      * @param status
      */
     @Override
-    public void updatePayment(String transactionId, TransactionStatus status){
+    public void updatePayment(String transactionId, String orderId, TransactionStatus status, String reason){
 
     }
 }

@@ -8,11 +8,8 @@ datasource:
   redis:
     database: 0
     master:
-      host: ${REDIS_MASTER_HOST}
-      port: ${REDIS_MASTER_PORT}
-    replicas:
-      - host: ${REDIS_REPLICA_1_HOST}
-        port: ${REDIS_REPLICA_1_PORT}
+      host: ${REDIS_MASTER_HOST:localhost}
+      port: ${REDIS_MASTER_PORT:6379}
 
 ---
 spring.config.activate.on-profile: local, test
@@ -22,15 +19,39 @@ datasource:
     master:
       host: localhost
       port: 6379
-    replicas:
-      - host: localhost
-        port: 6380
 
 ---
 spring.config.activate.on-profile: dev
 
+datasource:
+  redis:
+    master:
+      host: ${REDIS_MASTER_HOST}
+      port: ${REDIS_MASTER_PORT}
+    replicas:
+      - host: ${REDIS_REPLICA_1_HOST}
+        port: ${REDIS_REPLICA_1_PORT}
+
 ---
 spring.config.activate.on-profile: qa
 
+datasource:
+  redis:
+    master:
+      host: ${REDIS_MASTER_HOST}
+      port: ${REDIS_MASTER_PORT}
+    replicas:
+      - host: ${REDIS_REPLICA_1_HOST}
+        port: ${REDIS_REPLICA_1_PORT}
+
 ---
 spring.config.activate.on-profile: prd
+
+datasource:
+  redis:
+    master:
+      host: ${REDIS_MASTER_HOST}
+      port: ${REDIS_MASTER_PORT}
+    replicas:
+      - host: ${REDIS_REPLICA_1_HOST}
+        port: ${REDIS_REPLICA_1_PORT}

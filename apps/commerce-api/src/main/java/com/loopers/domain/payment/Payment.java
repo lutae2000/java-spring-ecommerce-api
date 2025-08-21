@@ -1,11 +1,11 @@
 package com.loopers.domain.payment;
 
 import com.loopers.domain.BaseEntity;
+import com.loopers.interfaces.api.payment.CardType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Payment extends BaseEntity {
-    @Id
+
     @Column(name = "transaction_key", nullable = false, unique = true)
     private String transactionKey;
 
@@ -37,7 +37,7 @@ public class Payment extends BaseEntity {
     private String orderId;
 
     @Column(name = "card_type", nullable = false)
-    private String cardType;
+    private CardType cardType;
 
     @Column(name = "card_no", nullable = false)
     private String cardNo;
@@ -50,8 +50,7 @@ public class Payment extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private TransactionStatus status = TransactionStatus.PENDING;
+    private TransactionStatus status;
 
-    @Column(name = "reason", nullable = true)
     private String reason;
 }

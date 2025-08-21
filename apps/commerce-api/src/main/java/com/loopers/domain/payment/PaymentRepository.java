@@ -21,5 +21,5 @@ public interface PaymentRepository {
      * @param transactionId
      * @param status
      */
-    void updatePayment(String transactionId, TransactionStatus status);
+    void updatePayment(String transactionId, String orderId, TransactionStatus status, String reason);
 }
