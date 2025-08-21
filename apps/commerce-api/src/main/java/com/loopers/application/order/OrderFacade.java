@@ -1,5 +1,7 @@
 package com.loopers.application.order;
 
+import com.loopers.domain.card.Card;
+import com.loopers.domain.card.CardService;
 import com.loopers.domain.coupon.Coupon;
 import com.loopers.domain.coupon.CouponCommand;
 import com.loopers.domain.coupon.CouponService;
@@ -9,6 +11,7 @@ import com.loopers.domain.order.OrderDetail;
 import com.loopers.domain.order.OrderDetailCommand.orderItem;
 import com.loopers.domain.order.OrderInfo;
 import com.loopers.domain.order.OrderService;
+import com.loopers.domain.payment.PaymentService;
 import com.loopers.domain.point.Point;
 import com.loopers.domain.point.PointInfo;
 import com.loopers.domain.point.PointService;
@@ -36,8 +39,10 @@ public class OrderFacade {
     private final PointService pointService;
     private final ProductService productService;
     private final CouponService couponService;
+    private final PaymentService paymentService;
+    private final CardService cardService;
 
-    @Transactional
+//    @Transactional
     public OrderResult orderSubmit(String userId, Order order){
         BigDecimal discountPrice = BigDecimal.ZERO;
 
@@ -65,24 +70,33 @@ public class OrderFacade {
             }
         }
 
-
+        Long cost = order.getTotalAmount().subtract(discountPrice).longValue();
         //포인트 잔액 조회
-        Point pointInfo = pointService.getPointInfo(userInfo.getUserId());
+/*        Point pointInfo = pointService.getPointInfo(userInfo.getUserId());
         log.debug("::: pointInfo ::: {}", pointInfo);
 
-        Long cost = order.getTotalAmount().subtract(discountPrice).longValue();
 
         if(pointInfo.getPoint() < cost){
             throw new CoreException(ErrorType.BAD_REQUEST, "가지고 있는 잔액이 부족합니다");
         } else{
             pointService.updatePoint(userInfo.getUserId(), cost);
-        }
+        }*/
+
+
 
         for(OrderDetail item : order.getOrderDetailList()){   //재고 차감
             productService.orderedStock(item.getProductId(), item.getQuantity());
         }
 
         OrderInfo orderInfo = orderService.placeOrder(userId, order, discountPrice);
+
+        Card card = cardService.getCardByUserId(userId);
+
+        if(ObjectUtils.isEmpty(card)){
+            throw new CoreException(ErrorType.NOT_FOUND, "결제할 카드가 미등록되어 있습니다");
+        }
+        //결제 진행
+        paymentService.createPayment(userId, orderInfo.getOrder().getOrderNo(), cost, card.getCardType(), card.getCardNo());
 
         return OrderResult.of(orderInfo);
     }
