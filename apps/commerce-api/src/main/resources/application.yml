@@ -87,3 +87,17 @@ feign:
       enabled: true
     response:
       enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,circuitbreakers,retries
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+    retries:
+      enabled: true

@@ -11,6 +11,11 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation ("org.springframework.cloud:spring-cloud-starter-openfeign")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:${project.properties["springDocOpenApiVersion"]}")
+    
+    // resilience4j
+    implementation("io.github.resilience4j:resilience4j-spring-boot3")
+    implementation("io.github.resilience4j:resilience4j-circuitbreaker")
+    implementation("io.github.resilience4j:resilience4j-annotations")
 
     // querydsl
     implementation("com.querydsl:querydsl-jpa::jakarta")

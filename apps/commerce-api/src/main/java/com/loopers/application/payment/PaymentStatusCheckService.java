@@ -8,6 +8,8 @@ import com.loopers.domain.payment.TransactionStatus;
 import com.loopers.domain.payment.PaymentService;
 import com.loopers.interfaces.api.payment.PaymentClient;
 import com.loopers.interfaces.api.ApiResponse;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -49,6 +51,8 @@ public class PaymentStatusCheckService {
     /**
      * 개별 결제 상태 확인
      */
+    @CircuitBreaker(name = "paymentService", fallbackMethod = "checkPaymentStatusFallback")
+    @Retry(name = "paymentService")
     private void checkPaymentStatus(Payment payment) {
         try {
             log.info("Checking payment status for transactionKey: {}", payment.getTransactionKey());
@@ -100,5 +104,14 @@ public class PaymentStatusCheckService {
         } else {
             log.warn("Payment not found for transactionKey: {}", transactionKey);
         }
+    }
+
+    /**
+     * checkPaymentStatus fallback 메서드
+     */
+    private void checkPaymentStatusFallback(Payment payment, Exception e) {
+        log.warn("Payment status check failed for transactionKey: {}, using fallback. Error: {}", 
+            payment.getTransactionKey(), e.getMessage());
+        // fallback에서는 로그만 남기고 계속 진행
     }
 }

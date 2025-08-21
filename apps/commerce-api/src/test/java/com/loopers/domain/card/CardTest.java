@@ -242,4 +242,79 @@ class CardTest {
             assertThat(card.getCardName()).isEqualTo(koreanCardName);
         }
     }
+
+    @Nested
+    @DisplayName("Card 카드번호 포맷팅 테스트")
+    class CardNumberFormattingTest {
+
+        @Test
+        @DisplayName("성공 - 16자리 카드번호 포맷팅")
+        void getFormattedCardNo_success() {
+            // given
+            Card card = new Card();
+            card.setCardNo("1234567890123456");
+
+            // when
+            String result = card.getFormattedCardNo();
+
+            // then
+            assertThat(result).isEqualTo("1234-5678-9012-3456");
+        }
+
+        @Test
+        @DisplayName("실패 - 16자리가 아닌 카드번호")
+        void getFormattedCardNo_failure_invalid_length() {
+            // given
+            Card card = new Card();
+            card.setCardNo("123456789012345"); // 15자리
+
+            // when
+            String result = card.getFormattedCardNo();
+
+            // then
+            assertThat(result).isEqualTo("123456789012345");
+        }
+
+        @Test
+        @DisplayName("실패 - null 카드번호")
+        void getFormattedCardNo_failure_null() {
+            // given
+            Card card = new Card();
+            card.setCardNo(null);
+
+            // when
+            String result = card.getFormattedCardNo();
+
+            // then
+            assertThat(result).isNull();
+        }
+
+        @Test
+        @DisplayName("성공 - 마지막 4자리 추출")
+        void getLastFourDigits_success() {
+            // given
+            Card card = new Card();
+            card.setCardNo("1234567890123456");
+
+            // when
+            String result = card.getLastFourDigits();
+
+            // then
+            assertThat(result).isEqualTo("3456");
+        }
+
+        @Test
+        @DisplayName("성공 - 카드번호 마스킹")
+        void getMaskedCardNo_success() {
+            // given
+            Card card = new Card();
+            card.setCardNo("1234567890123456");
+
+            // when
+            String result = card.getMaskedCardNo();
+
+            // then
+            assertThat(result).isEqualTo("****-****-****-3456");
+        }
+    }
 }
