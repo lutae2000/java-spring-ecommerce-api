@@ -1,5 +1,6 @@
 package com.loopers.interfaces.api.payment;
 
+import com.loopers.application.payment.PaymentStatusCheckService;
 import com.loopers.domain.payment.OrderResponse;
 import com.loopers.domain.payment.PaymentInfo;
 import com.loopers.domain.payment.PaymentService;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1")
 public class PaymentController {
     private final PaymentService paymentService;
+    private final PaymentStatusCheckService paymentStatusCheckService;
 
     /**
      * 주문 생성
@@ -75,5 +77,13 @@ public class PaymentController {
             throw new CoreException(ErrorType.BAD_REQUEST, "User ID header is required");
         }
         return paymentService.getTransactionByOrder(userId, orderId);
+    }
+
+    /**
+     * 수동으로 결제 상태 확인
+     */
+    @PostMapping("/payments/check-status")
+    public void checkPaymentStatus(@RequestParam("transactionKey") String transactionKey) {
+        paymentStatusCheckService.checkPaymentStatusManually(transactionKey);
     }
 }

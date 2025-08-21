@@ -1,5 +1,7 @@
 package com.loopers.domain.payment;
 
+import java.util.List;
+
 public interface PaymentRepository {
 
     /**
@@ -15,6 +17,13 @@ public interface PaymentRepository {
      * @return
      */
     Payment findByTransactionKey(String transactionKey);
+
+    /**
+     * 상태별 결제정보 조회
+     * @param status
+     * @return
+     */
+    List<Payment> findByStatus(TransactionStatus status);
 
     /**
      * 결제정보 업데이트
