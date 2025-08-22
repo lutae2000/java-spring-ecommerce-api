@@ -7,7 +7,7 @@ resilience4j:
         # 최소 요청 수 (10개 요청 후 실패율 계산)
         minimum-number-of-calls: 10
         # 슬라이딩 윈도우 크기 (100개 요청을 기준으로 실패율 계산)
-        sliding-window-size: 100
+        sliding-window-size: 10
         # 슬라이딩 윈도우 타입 (카운트 기반)
         sliding-window-type: count_based
         # 서킷브레이커가 열린 후 대기 시간 (30초)
@@ -37,3 +37,4 @@ resilience4j:
         # 재시도하지 않을 예외들
         ignore-exceptions:
           - com.loopers.support.error.CoreException
+

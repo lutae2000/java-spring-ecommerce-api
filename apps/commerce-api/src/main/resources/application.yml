@@ -70,34 +70,3 @@ spring:
 springdoc:
   api-docs:
     enabled: false
-
-payment:
-  gateway:
-    url: http://localhost:8082
-
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 5000
-        readTimeout: 10000
-        loggerLevel: full
-  compression:
-    request:
-      enabled: true
-    response:
-      enabled: true
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,circuitbreakers,retries
-  endpoint:
-    health:
-      show-details: always
-  health:
-    circuitbreakers:
-      enabled: true
-    retries:
-      enabled: true

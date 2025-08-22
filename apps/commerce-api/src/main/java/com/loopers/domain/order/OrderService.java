@@ -1,11 +1,6 @@
 package com.loopers.domain.order;
 
 
-import com.loopers.domain.domainEnum.OrderStatus;
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
-import com.loopers.support.utils.StringUtil;
-
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +20,7 @@ public class OrderService {
     public OrderInfo placeOrder(String userId, Order order, BigDecimal discountPrice){
 
         orderRepository.save(order);
-        orderDetailRepository.OrderDetailSave(order.getOrderDetailList());
+        orderDetailRepository.saveAll(order.getOrderDetailList());
 
         log.info("주문이 생성되었습니다. 주문번호: {}, 사용자: {}", order.getOrderNo(), userId);
         return OrderInfo.of(order);
@@ -41,5 +36,10 @@ public class OrderService {
     @Transactional(readOnly = true)
     public OrderInfo findOrderInfoByOrderNo(String userId, String orderNo){
         return OrderInfo.of(orderRepository.findByOrderNo(userId, orderNo).orElseThrow());
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderDetail> findOrderDetailByOrderNo(String orderId){
+        return orderDetailRepository.findByOrderId(orderId);
     }
 }

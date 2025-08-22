@@ -2,6 +2,7 @@ package com.loopers.domain.domainEnum;
 
 public enum OrderStatus {
     ORDER_PLACED,
+    ORDER_PAID,
     ORDER_CONFIRMED,
     ORDER_REFUND,
     ORDER_CANCEL,

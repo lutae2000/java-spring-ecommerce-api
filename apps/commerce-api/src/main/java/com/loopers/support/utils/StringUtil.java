@@ -1,6 +1,7 @@
 package com.loopers.support.utils;
 
 import java.security.SecureRandom;
+import org.apache.commons.lang3.StringUtils;
 
 public class StringUtil {
 
@@ -23,5 +24,21 @@ public class StringUtil {
         }
 
         return builder.toString();
+    }
+
+    //카드 번호 사이에 하이픈 추가
+    public static String cardNoWithHyphen(String cardNo){
+        if(cardNo.length() != 16 || StringUtils.isEmpty(cardNo)){
+            return cardNo;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for(int i =0; i < cardNo.length(); i++){
+            if(i % 4 == 0 && i != 0){
+                sb.append("-");
+            }
+            sb.append(cardNo.charAt(i));
+        }
+        return sb.toString();
     }
 }

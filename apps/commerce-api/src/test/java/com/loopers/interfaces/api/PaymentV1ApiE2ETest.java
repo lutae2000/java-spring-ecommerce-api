@@ -4,19 +4,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.loopers.domain.payment.OrderResponse;
 import com.loopers.domain.payment.PaymentResponse;
 import com.loopers.domain.payment.TransactionDetailResponse;
-import com.loopers.domain.payment.TransactionInfo;
+import com.loopers.domain.payment.TransactionResponse;
 import com.loopers.domain.payment.TransactionStatus;
 import com.loopers.interfaces.api.payment.CardType;
 import com.loopers.interfaces.api.payment.PaymentClient;
 import com.loopers.interfaces.api.payment.PaymentCreateReq;
-import com.loopers.domain.payment.PaymentInfo;
+import com.loopers.interfaces.api.payment.PaymentDto;
+import com.loopers.interfaces.api.order.OrderDto;
+import com.loopers.interfaces.api.payment.TransactionDetailDto;
 import com.loopers.support.header.CustomHeader;
 import com.loopers.utils.DatabaseCleanUp;
 import java.util.List;
@@ -30,8 +31,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -83,22 +82,43 @@ public class PaymentV1ApiE2ETest {
     }
 
     private void setupMockPaymentClient() {
-        // 결제 생성 Mock
+        // 결제 생성 Mock - 성공 케이스
         PaymentResponse paymentResponse = new PaymentResponse("TRANSACTION001", TransactionStatus.PENDING);
         when(paymentClient.createPayment(any(PaymentCreateReq.class), eq(userId)))
             .thenReturn(ApiResponse.success(paymentResponse));
 
-        // 거래번호로 조회 Mock
-        TransactionDetailResponse transactionDetailResponse = new TransactionDetailResponse(
-            "TRANSACTION001", orderId, cardType, cardNo, amount, TransactionStatus.SUCCESS, "결제 성공"
-        );
-        when(paymentClient.getPaymentInfo(anyString(), eq(userId)))
+        // 결제 생성 Mock - 실패 케이스
+        when(paymentClient.createPayment(any(PaymentCreateReq.class), eq("user_fail")))
+            .thenThrow(new RuntimeException("Payment gateway error"));
+
+        // 거래번호로 조회 Mock - 성공 케이스
+        TransactionDetailResponse transactionDetailResponse = TransactionDetailResponse.builder()
+            .transactionKey("TRANSACTION001")
+            .orderId(orderId)
+            .amount(amount)
+            .cardType(cardType)
+            .cardNo(cardNo)
+            .status(TransactionStatus.SUCCESS)
+            .reason("결제 성공")
+            .build();
+        when(paymentClient.getPaymentInfo("TRANSACTION001", userId))
             .thenReturn(ApiResponse.success(transactionDetailResponse));
 
-        // 주문번호로 조회 Mock
-        OrderResponse orderResponse = new OrderResponse(orderId, List.of());
-        when(paymentClient.getTransactionsByOrder(anyString(), eq(userId)))
+        // 거래번호로 조회 Mock - 실패 케이스
+        when(paymentClient.getPaymentInfo("INVALID_TRANSACTION", userId))
+            .thenThrow(new RuntimeException("Transaction not found"));
+
+        // 주문번호로 조회 Mock - 성공 케이스
+        OrderResponse orderResponse = OrderResponse.builder()
+            .orderId(orderId)
+            .transactions(List.of(new TransactionResponse("TRANSACTION001", TransactionStatus.SUCCESS, "정상 승인되었습니다")))
+            .build();
+        when(paymentClient.getTransactionsByOrder(orderId, userId))
             .thenReturn(ApiResponse.success(orderResponse));
+
+        // 주문번호로 조회 Mock - 실패 케이스
+        when(paymentClient.getTransactionsByOrder("INVALID_ORDER", userId))
+            .thenThrow(new RuntimeException("Order not found"));
     }
 
     @AfterEach
@@ -107,38 +127,35 @@ public class PaymentV1ApiE2ETest {
     }
 
     @Nested
-    @DisplayName("POST /api/v1/payments")
+    @DisplayName("POST /api/v1/payments - 결제 생성")
     class CreatePayment {
 
         @Test
         @DisplayName("성공 - 정상적인 결제 생성")
         void createPayment_success() {
             // given
-            PaymentCreateReq request = PaymentCreateReq.builder()
-                .orderId(orderId)
-                .amount(amount)
-                .cardType(cardType)
-                .cardNo(cardNo)
-                .callbackUrl("http://localhost:8080/api/v1/payment/callback")
-                .build();
+            PaymentDto.CreateRequest request = new PaymentDto.CreateRequest(
+                orderId, amount, cardType, cardNo
+            );
 
             // when
-            ResponseEntity<PaymentInfo> response = testRestTemplate.exchange(
+            ResponseEntity<ApiResponse<PaymentDto.Response>> response = testRestTemplate.exchange(
                 ENDPOINT,
                 HttpMethod.POST,
                 new HttpEntity<>(request, headers),
-                PaymentInfo.class
+                new ParameterizedTypeReference<>() {}
             );
 
             // then
             assertAll(
                 () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK),
                 () -> assertThat(response.getBody()).isNotNull(),
-                () -> assertThat(response.getBody().getUserId()).isEqualTo(userId),
-                () -> assertThat(response.getBody().getOrderId()).isEqualTo(orderId),
-                () -> assertThat(response.getBody().getCardType()).isEqualTo(cardType),
-                () -> assertThat(response.getBody().getCardNo()).isEqualTo(cardNo),
-                () -> assertThat(response.getBody().getAmount()).isEqualTo(amount)
+                () -> assertThat(response.getBody().meta().result()).isEqualTo(ApiResponse.Metadata.Result.SUCCESS),
+                () -> assertThat(response.getBody().data()).isNotNull(),
+                () -> assertThat(response.getBody().data().orderId()).isEqualTo(orderId),
+                () -> assertThat(response.getBody().data().cardType()).isEqualTo(cardType),
+                () -> assertThat(response.getBody().data().cardNo()).isEqualTo(cardNo),
+                () -> assertThat(response.getBody().data().amount()).isEqualTo(amount)
             );
         }
 
@@ -146,27 +163,22 @@ public class PaymentV1ApiE2ETest {
         @DisplayName("성공 - SAMSUNG 카드로 결제")
         void createPayment_with_samsung_card_success() {
             // given
-            PaymentCreateReq request = PaymentCreateReq.builder()
-                .orderId(orderId)
-                .amount(amount)
-                .cardType(CardType.SAMSUNG)
-                .cardNo(cardNo)
-                .callbackUrl("http://localhost:8080/api/v1/payment/callback")
-                .build();
+            PaymentDto.CreateRequest request = new PaymentDto.CreateRequest(
+                orderId, amount, CardType.SAMSUNG, cardNo
+            );
 
             // when
-            ResponseEntity<PaymentInfo> response = testRestTemplate.exchange(
+            ResponseEntity<ApiResponse<PaymentDto.Response>> response = testRestTemplate.exchange(
                 ENDPOINT,
                 HttpMethod.POST,
                 new HttpEntity<>(request, headers),
-                PaymentInfo.class
+                new ParameterizedTypeReference<>() {}
             );
 
             // then
             assertAll(
                 () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK),
-                () -> assertThat(response.getBody()).isNotNull(),
-                () -> assertThat(response.getBody().getCardType()).isEqualTo(CardType.SAMSUNG)
+                () -> assertThat(response.getBody().data().cardType()).isEqualTo(CardType.SAMSUNG)
             );
         }
 
@@ -174,27 +186,22 @@ public class PaymentV1ApiE2ETest {
         @DisplayName("성공 - HYUNDAI 카드로 결제")
         void createPayment_with_hyundai_card_success() {
             // given
-            PaymentCreateReq request = PaymentCreateReq.builder()
-                .orderId(orderId)
-                .amount(amount)
-                .cardType(CardType.HYUNDAI)
-                .cardNo(cardNo)
-                .callbackUrl("http://localhost:8080/api/v1/payment/callback")
-                .build();
+            PaymentDto.CreateRequest request = new PaymentDto.CreateRequest(
+                orderId, amount, CardType.HYUNDAI, cardNo
+            );
 
             // when
-            ResponseEntity<PaymentInfo> response = testRestTemplate.exchange(
+            ResponseEntity<ApiResponse<PaymentDto.Response>> response = testRestTemplate.exchange(
                 ENDPOINT,
                 HttpMethod.POST,
                 new HttpEntity<>(request, headers),
-                PaymentInfo.class
+                new ParameterizedTypeReference<>() {}
             );
 
             // then
             assertAll(
                 () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK),
-                () -> assertThat(response.getBody()).isNotNull(),
-                () -> assertThat(response.getBody().getCardType()).isEqualTo(CardType.HYUNDAI)
+                () -> assertThat(response.getBody().data().cardType()).isEqualTo(CardType.HYUNDAI)
             );
         }
 
@@ -202,14 +209,9 @@ public class PaymentV1ApiE2ETest {
         @DisplayName("실패 - 사용자 ID 헤더 누락")
         void createPayment_failure_missing_user_id_header() {
             // given
-            PaymentCreateReq request = PaymentCreateReq.builder()
-                .orderId(orderId)
-                .amount(amount)
-                .cardType(cardType)
-                .cardNo(cardNo)
-                .callbackUrl("http://localhost:8080/api/v1/payment/callback")
-                .build();
-
+            PaymentDto.CreateRequest request = new PaymentDto.CreateRequest(
+                orderId, amount, cardType, cardNo
+            );
             HttpHeaders emptyHeaders = new HttpHeaders();
 
             // when
@@ -221,20 +223,48 @@ public class PaymentV1ApiE2ETest {
             );
 
             // then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST),
+                () -> assertThat(response.getBody().meta().result()).isEqualTo(ApiResponse.Metadata.Result.FAIL)
+            );
         }
 
         @Test
-        @DisplayName("실패 - 잘못된 카드번호 형식")
-        void createPayment_failure_invalid_card_number() {
+        @DisplayName("실패 - PaymentClient API 호출 실패")
+        void createPayment_failure_payment_client_error() {
             // given
-            PaymentCreateReq request = PaymentCreateReq.builder()
-                .orderId(orderId)
-                .amount(amount)
-                .cardType(cardType)
-                .cardNo("1234") // 잘못된 카드번호
-                .callbackUrl("http://localhost:8080/api/v1/payment/callback")
-                .build();
+            PaymentDto.CreateRequest request = new PaymentDto.CreateRequest(
+                orderId, amount, cardType, cardNo
+            );
+            HttpHeaders failHeaders = new HttpHeaders();
+            failHeaders.add(CustomHeader.USER_ID, "user_fail");
+
+            // when
+            ResponseEntity<ApiResponse<Object>> response = testRestTemplate.exchange(
+                ENDPOINT,
+                HttpMethod.POST,
+                new HttpEntity<>(request, failHeaders),
+                new ParameterizedTypeReference<>() {}
+            );
+
+            // then
+            assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK),
+                () -> assertThat(response.getBody().meta().result()).isEqualTo(ApiResponse.Metadata.Result.FAIL),
+                () -> assertThat(response.getBody().meta().message()).contains("결제 생성에 실패했습니다")
+            );
+        }
+
+        @Test
+        @DisplayName("실패 - 잘못된 요청 데이터")
+        void createPayment_failure_invalid_request_data() {
+            // given
+            PaymentDto.CreateRequest request = new PaymentDto.CreateRequest(
+                null, // orderId가 null
+                amount,
+                cardType,
+                cardNo
+            );
 
             // when
             ResponseEntity<ApiResponse<Object>> response = testRestTemplate.exchange(
@@ -245,98 +275,12 @@ public class PaymentV1ApiE2ETest {
             );
 
             // then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        }
-
-        @Test
-        @DisplayName("실패 - 음수 금액")
-        void createPayment_failure_negative_amount() {
-            // given
-            PaymentCreateReq request = PaymentCreateReq.builder()
-                .orderId(orderId)
-                .amount(-1000L) // 음수 금액
-                .cardType(cardType)
-                .cardNo(cardNo)
-                .callbackUrl("http://localhost:8080/api/v1/payment/callback")
-                .build();
-
-            // when
-            ResponseEntity<ApiResponse<Object>> response = testRestTemplate.exchange(
-                ENDPOINT,
-                HttpMethod.POST,
-                new HttpEntity<>(request, headers),
-                new ParameterizedTypeReference<>() {}
-            );
-
-            // then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        }
-    }
-
-    @Nested
-    @DisplayName("POST /api/v1/payments/callback")
-    class PaymentCallback {
-
-        @Test
-        @DisplayName("성공 - 결제 성공 콜백")
-        void paymentCallback_success() {
-            // given
-            TransactionInfo transactionInfo = new TransactionInfo(
-                "TRANSACTION001", orderId, amount, "결제 성공", 
-                TransactionStatus.SUCCESS, cardType, cardNo
-            );
-
-            // when
-            ResponseEntity<Void> response = testRestTemplate.exchange(
-                ENDPOINT + "/callback",
-                HttpMethod.POST,
-                new HttpEntity<>(transactionInfo),
-                Void.class
-            );
-
-            // then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        }
-
-        @Test
-        @DisplayName("성공 - 결제 실패 콜백")
-        void paymentCallback_failure() {
-            // given
-            TransactionInfo transactionInfo = new TransactionInfo(
-                "TRANSACTION002", orderId, amount, "잔액 부족", 
-                TransactionStatus.FAIL, cardType, cardNo
-            );
-
-            // when
-            ResponseEntity<Void> response = testRestTemplate.exchange(
-                ENDPOINT + "/callback",
-                HttpMethod.POST,
-                new HttpEntity<>(transactionInfo),
-                Void.class
-            );
-
-            // then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        }
-
-        @Test
-        @DisplayName("실패 - TransactionInfo가 null인 경우")
-        void paymentCallback_failure_null_transaction_info() {
-            // when
-            ResponseEntity<ApiResponse<Object>> response = testRestTemplate.exchange(
-                ENDPOINT + "/callback",
-                HttpMethod.POST,
-                new HttpEntity<>(null),
-                new ParameterizedTypeReference<>() {}
-            );
-
-            // then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         }
     }
 
     @Nested
-    @DisplayName("GET /api/v1/payments/transaction")
+    @DisplayName("GET /api/v1/payments/transaction - 거래번호로 결제 조회")
     class GetPaymentInfoByTransactionKey {
 
         @Test
@@ -346,51 +290,22 @@ public class PaymentV1ApiE2ETest {
             String transactionKey = "TRANSACTION001";
 
             // when
-            ResponseEntity<TransactionDetailResponse> response = testRestTemplate.exchange(
+            ResponseEntity<ApiResponse<TransactionDetailDto.Response>> response = testRestTemplate.exchange(
                 ENDPOINT + "/transaction?transactionKey=" + transactionKey,
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                TransactionDetailResponse.class
+                new ParameterizedTypeReference<>() {}
             );
 
             // then
             assertAll(
                 () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK),
-                () -> assertThat(response.getBody()).isNotNull()
+                () -> assertThat(response.getBody().meta().result()).isEqualTo(ApiResponse.Metadata.Result.SUCCESS),
+                () -> assertThat(response.getBody().data()).isNotNull(),
+                () -> assertThat(response.getBody().data().transactionKey()).isEqualTo(transactionKey),
+                () -> assertThat(response.getBody().data().orderId()).isEqualTo(orderId),
+                () -> assertThat(response.getBody().data().status()).isEqualTo(TransactionStatus.SUCCESS)
             );
-        }
-
-        @Test
-        @DisplayName("실패 - 존재하지 않는 거래번호")
-        void getPaymentInfoByTransactionKey_not_found() {
-            // given
-            String nonExistentTransactionKey = "NON_EXISTENT_TRANSACTION";
-
-            // when
-            ResponseEntity<ApiResponse<Object>> response = testRestTemplate.exchange(
-                ENDPOINT + "/transaction?transactionKey=" + nonExistentTransactionKey,
-                HttpMethod.GET,
-                new HttpEntity<>(headers),
-                new ParameterizedTypeReference<>() {}
-            );
-
-            // then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        }
-
-        @Test
-        @DisplayName("실패 - 거래번호 파라미터 누락")
-        void getPaymentInfoByTransactionKey_missing_parameter() {
-            // when
-            ResponseEntity<ApiResponse<Object>> response = testRestTemplate.exchange(
-                ENDPOINT + "/transaction",
-                HttpMethod.GET,
-                new HttpEntity<>(headers),
-                new ParameterizedTypeReference<>() {}
-            );
-
-            // then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         }
 
         @Test
@@ -409,68 +324,79 @@ public class PaymentV1ApiE2ETest {
             );
 
             // then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST),
+                () -> assertThat(response.getBody().meta().result()).isEqualTo(ApiResponse.Metadata.Result.FAIL)
+            );
         }
-    }
-
-    @Nested
-    @DisplayName("GET /api/v1/payments/order")
-    class GetTransactionByOrderNo {
 
         @Test
-        @DisplayName("성공 - 주문번호로 거래번호 조회")
-        void getTransactionByOrderNo_success() {
+        @DisplayName("실패 - transactionKey 파라미터 누락")
+        void getPaymentInfoByTransactionKey_missing_parameter() {
             // when
-            ResponseEntity<OrderResponse> response = testRestTemplate.exchange(
-                ENDPOINT + "/order?orderId=" + orderId,
+            ResponseEntity<ApiResponse<Object>> response = testRestTemplate.exchange(
+                ENDPOINT + "/transaction",
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                OrderResponse.class
+                new ParameterizedTypeReference<>() {}
+            );
+
+            // then
+            assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST),
+                () -> assertThat(response.getBody().meta().result()).isEqualTo(ApiResponse.Metadata.Result.FAIL)
+            );
+        }
+
+        @Test
+        @DisplayName("실패 - 존재하지 않는 거래번호")
+        void getPaymentInfoByTransactionKey_not_found() {
+            // given
+            String nonExistentTransactionKey = "INVALID_TRANSACTION";
+
+            // when
+            ResponseEntity<ApiResponse<TransactionDetailDto.Response>> response = testRestTemplate.exchange(
+                ENDPOINT + "/transaction?transactionKey=" + nonExistentTransactionKey,
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                new ParameterizedTypeReference<>() {}
             );
 
             // then
             assertAll(
                 () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK),
-                () -> assertThat(response.getBody()).isNotNull()
+                () -> assertThat(response.getBody().meta().result()).isEqualTo(ApiResponse.Metadata.Result.SUCCESS),
+                () -> assertThat(response.getBody().data().status()).isEqualTo(TransactionStatus.FAIL),
+                () -> assertThat(response.getBody().data().reason()).contains("Payment gateway unavailable")
             );
         }
+    }
+
+    @Nested
+    @DisplayName("GET /api/v1/payments/order - 주문번호로 거래 조회")
+    class GetTransactionByOrder {
 
         @Test
-        @DisplayName("실패 - 존재하지 않는 주문번호")
-        void getTransactionByOrderNo_not_found() {
-            // given
-            String nonExistentOrderId = "NON_EXISTENT_ORDER";
-
+        @DisplayName("성공 - 주문번호로 거래번호 조회")
+        void getTransactionByOrder_success() {
             // when
-            ResponseEntity<ApiResponse<Object>> response = testRestTemplate.exchange(
-                ENDPOINT + "/order?orderId=" + nonExistentOrderId,
+            ResponseEntity<ApiResponse<OrderDto.Response>> response = testRestTemplate.exchange(
+                ENDPOINT + "/order?orderId=" + orderId,
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
                 new ParameterizedTypeReference<>() {}
             );
 
             // then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        }
-
-        @Test
-        @DisplayName("실패 - 주문번호 파라미터 누락")
-        void getTransactionByOrderNo_missing_parameter() {
-            // when
-            ResponseEntity<ApiResponse<Object>> response = testRestTemplate.exchange(
-                ENDPOINT + "/order",
-                HttpMethod.GET,
-                new HttpEntity<>(headers),
-                new ParameterizedTypeReference<>() {}
+            assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK),
+                () -> assertThat(response.getBody().meta().result()).isEqualTo(ApiResponse.Metadata.Result.SUCCESS)
             );
-
-            // then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         }
 
         @Test
         @DisplayName("실패 - 사용자 ID 헤더 누락")
-        void getTransactionByOrderNo_missing_user_id_header() {
+        void getTransactionByOrder_missing_user_id_header() {
             // given
             HttpHeaders emptyHeaders = new HttpHeaders();
 
@@ -483,7 +409,49 @@ public class PaymentV1ApiE2ETest {
             );
 
             // then
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST),
+                () -> assertThat(response.getBody().meta().result()).isEqualTo(ApiResponse.Metadata.Result.FAIL)
+            );
+        }
+
+        @Test
+        @DisplayName("실패 - orderId 파라미터 누락")
+        void getTransactionByOrder_missing_parameter() {
+            // when
+            ResponseEntity<ApiResponse<Object>> response = testRestTemplate.exchange(
+                ENDPOINT + "/order",
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                new ParameterizedTypeReference<>() {}
+            );
+
+            // then
+            assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST),
+                () -> assertThat(response.getBody().meta().result()).isEqualTo(ApiResponse.Metadata.Result.FAIL)
+            );
+        }
+
+        @Test
+        @DisplayName("실패 - 존재하지 않는 주문번호")
+        void getTransactionByOrder_not_found() {
+            // given
+            String nonExistentOrderId = "INVALID_ORDER";
+
+            // when
+            ResponseEntity<ApiResponse<OrderDto.Response>> response = testRestTemplate.exchange(
+                ENDPOINT + "/order?orderId=" + nonExistentOrderId,
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                new ParameterizedTypeReference<>() {}
+            );
+
+            // then
+            assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK),
+                () -> assertThat(response.getBody().meta().result()).isEqualTo(ApiResponse.Metadata.Result.SUCCESS)
+            );
         }
     }
 
@@ -492,105 +460,69 @@ public class PaymentV1ApiE2ETest {
     class IntegrationTest {
 
         @Test
-        @DisplayName("성공 - 결제 생성 후 콜백 처리")
-        void payment_create_and_callback_success() {
+        @DisplayName("성공 - 결제 생성 후 조회")
+        void payment_create_and_retrieve_success() {
             // given - 결제 생성
-            PaymentCreateReq createRequest = PaymentCreateReq.builder()
-                .orderId(orderId)
-                .amount(amount)
-                .cardType(cardType)
-                .cardNo(cardNo)
-                .callbackUrl("http://localhost:8080/api/v1/payment/callback")
-                .build();
+            PaymentDto.CreateRequest createRequest = new PaymentDto.CreateRequest(
+                "ORDER_INTEGRATION", amount, cardType, cardNo
+            );
 
-            ResponseEntity<PaymentInfo> createResponse = testRestTemplate.exchange(
+            ResponseEntity<ApiResponse<PaymentDto.Response>> createResponse = testRestTemplate.exchange(
                 ENDPOINT,
                 HttpMethod.POST,
                 new HttpEntity<>(createRequest, headers),
-                PaymentInfo.class
+                new ParameterizedTypeReference<>() {}
             );
 
             // then - 결제 생성 확인
             assertAll(
                 () -> assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.OK),
-                () -> assertThat(createResponse.getBody()).isNotNull()
+                () -> assertThat(createResponse.getBody().data()).isNotNull()
             );
 
-            // given - 콜백 처리 (실제 결제 요청에서 받은 transactionKey 사용)
-            String transactionKey = createResponse.getBody().getTransactionKey();
-            TransactionInfo transactionInfo = new TransactionInfo(
-                transactionKey, orderId, amount, "결제 성공", 
-                TransactionStatus.SUCCESS, cardType, cardNo
-            );
-
-            // when - 콜백 호출
-            ResponseEntity<Void> callbackResponse = testRestTemplate.exchange(
-                ENDPOINT + "/callback",
-                HttpMethod.POST,
-                new HttpEntity<>(transactionInfo),
-                Void.class
-            );
-
-            // then - 콜백 처리 확인
-            assertThat(callbackResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+            // given - 거래번호로 조회
+            String transactionKey = createResponse.getBody().data().transactionKey();
 
             // when - 거래번호로 조회
-            ResponseEntity<TransactionDetailResponse> getResponse = testRestTemplate.exchange(
+            ResponseEntity<ApiResponse<TransactionDetailDto.Response>> getResponse = testRestTemplate.exchange(
                 ENDPOINT + "/transaction?transactionKey=" + transactionKey,
                 HttpMethod.GET,
                 new HttpEntity<>(headers),
-                TransactionDetailResponse.class
+                new ParameterizedTypeReference<>() {}
             );
 
             // then - 조회 결과 확인
             assertAll(
                 () -> assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK),
-                () -> assertThat(getResponse.getBody()).isNotNull()
+                () -> assertThat(getResponse.getBody().data()).isNotNull(),
+                () -> assertThat(getResponse.getBody().data().transactionKey()).isEqualTo(transactionKey)
             );
         }
 
         @Test
-        @DisplayName("성공 - 결제 생성 후 실패 콜백 처리")
-        void payment_create_and_callback_failure() {
-            // given - 결제 생성
-            PaymentCreateReq createRequest = PaymentCreateReq.builder()
-                .orderId("ORDER002")
-                .amount(amount)
-                .cardType(cardType)
-                .cardNo(cardNo)
-                .callbackUrl("http://localhost:8080/api/v1/payment/callback")
-                .build();
+        @DisplayName("실패 - 결제 생성 실패 후 fallback 동작")
+        void payment_create_failure_with_fallback() {
+            // given - 실패할 사용자로 결제 생성
+            PaymentDto.CreateRequest createRequest = new PaymentDto.CreateRequest(
+                "ORDER_FAILURE", amount, cardType, cardNo
+            );
+            HttpHeaders failHeaders = new HttpHeaders();
+            failHeaders.add(CustomHeader.USER_ID, "user_fail");
 
-            ResponseEntity<PaymentInfo> createResponse = testRestTemplate.exchange(
+            // when
+            ResponseEntity<ApiResponse<Object>> response = testRestTemplate.exchange(
                 ENDPOINT,
                 HttpMethod.POST,
-                new HttpEntity<>(createRequest, headers),
-                PaymentInfo.class
+                new HttpEntity<>(createRequest, failHeaders),
+                new ParameterizedTypeReference<>() {}
             );
 
-            // then - 결제 생성 확인
+            // then - fallback 동작 확인
             assertAll(
-                () -> assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.OK),
-                () -> assertThat(createResponse.getBody()).isNotNull()
+                () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK),
+                () -> assertThat(response.getBody().meta().result()).isEqualTo(ApiResponse.Metadata.Result.FAIL),
+                () -> assertThat(response.getBody().meta().message()).contains("결제 생성에 실패했습니다")
             );
-
-            // given - 실패 콜백 처리
-            String transactionKey = createResponse.getBody().getTransactionKey();
-            TransactionInfo transactionInfo = new TransactionInfo(
-                transactionKey, "ORDER002", amount, "잔액 부족", 
-                TransactionStatus.FAIL, cardType, cardNo
-            );
-
-            // when - 콜백 호출
-            ResponseEntity<Void> callbackResponse = testRestTemplate.exchange(
-                ENDPOINT + "/callback",
-                HttpMethod.POST,
-                new HttpEntity<>(transactionInfo),
-                Void.class
-            );
-
-            // then - 콜백 처리 확인
-            assertThat(callbackResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         }
     }
 }

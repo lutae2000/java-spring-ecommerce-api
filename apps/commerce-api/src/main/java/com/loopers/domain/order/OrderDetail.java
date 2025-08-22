@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 @Entity
@@ -19,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class OrderDetail extends BaseEntity {
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_no")
@@ -53,4 +55,9 @@ public class OrderDetail extends BaseEntity {
             throw new CoreException(ErrorType.BAD_REQUEST, "주문수량은 1개 이상이어야 합니다");
         }
     }
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
+
 }

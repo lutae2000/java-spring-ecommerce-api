@@ -10,6 +10,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.loopers.domain.order.OrderRepository;
 import com.loopers.interfaces.api.ApiResponse;
 import com.loopers.interfaces.api.payment.CardType;
 import com.loopers.interfaces.api.payment.PaymentClient;
@@ -34,6 +35,9 @@ class PaymentServiceTest {
 
     @Mock
     private PaymentRepository paymentRepository;
+
+    @Mock
+    private OrderRepository orderRepository;
 
     @InjectMocks
     private PaymentService paymentService;
@@ -60,7 +64,7 @@ class PaymentServiceTest {
     class CreatePayment {
 
         @Test
-        @DisplayName("성공 - 정상적인 결제 생성 PG가 이상해서 오류남")
+        @DisplayName("성공 - 정상적인 결제 생성")
         void createPayment_success() {
             // given
             PaymentResponse paymentResponse = new PaymentResponse(transactionKey, TransactionStatus.PENDING);
@@ -96,68 +100,19 @@ class PaymentServiceTest {
         }
 
         @Test
-        @DisplayName("실패 - PaymentClient API 호출 실패")
-        void createPayment_failure_api_call_failed() {
+        @DisplayName("실패 - PaymentClient API 호출 실패 시 fallback 동작")
+        void createPayment_failure_api_call_failed_fallback() {
             // given
             when(paymentClient.createPayment(any(PaymentCreateReq.class), eq(userId)))
                 .thenThrow(new RuntimeException("API 호출 실패"));
-
-            // when & then
-            CoreException exception = assertThrows(CoreException.class, () -> {
-                paymentService.createPayment(userId, orderId, amount, cardType, cardNo);
-            });
-
-            assertAll(
-                () -> assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST),
-                () -> assertThat(exception.getMessage()).isEqualTo("Payment create failed")
-            );
-
-            verify(paymentClient, times(1)).createPayment(any(PaymentCreateReq.class), eq(userId));
-            verify(paymentRepository, times(0)).save(any(Payment.class));
-        }
-
-        @Test
-        @DisplayName("실패 - PaymentClient 예외 발생")
-        void createPayment_failure_exception_thrown() {
-            // given
-            when(paymentClient.createPayment(any(PaymentCreateReq.class), eq(userId)))
-                .thenThrow(new RuntimeException("Network error"));
-
-            // when & then
-            CoreException exception = assertThrows(CoreException.class, () -> {
-                paymentService.createPayment(userId, orderId, amount, cardType, cardNo);
-            });
-
-            assertAll(
-                () -> assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST),
-                () -> assertThat(exception.getMessage()).isEqualTo("Payment create failed")
-            );
-
-            verify(paymentClient, times(1)).createPayment(any(PaymentCreateReq.class), eq(userId));
-            verify(paymentRepository, times(0)).save(any(Payment.class));
-        }
-
-        @Test
-        @DisplayName("실패 - Repository 저장 실패")
-        void createPayment_failure_repository_save_failed() {
-            // given
-            PaymentResponse paymentResponse = new PaymentResponse(transactionKey, TransactionStatus.PENDING);
-            ApiResponse<PaymentResponse> apiResponse = ApiResponse.success(paymentResponse);
-
-            when(paymentClient.createPayment(any(PaymentCreateReq.class), eq(userId)))
-                .thenReturn(apiResponse);
             when(paymentRepository.save(any(Payment.class)))
-                .thenThrow(new RuntimeException("Database error"));
+                .thenReturn(new Payment(null, userId, orderId, cardType, cardNo, amount, null, TransactionStatus.FAIL, "API 호출 실패"));
 
-            // when & then
-            CoreException exception = assertThrows(CoreException.class, () -> {
-                paymentService.createPayment(userId, orderId, amount, cardType, cardNo);
-            });
+            // when
+            PaymentInfo result = paymentService.createPayment(userId, orderId, amount, cardType, cardNo);
 
-            assertAll(
-                () -> assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST),
-                () -> assertThat(exception.getMessage()).isEqualTo("Payment create failed")
-            );
+            // then
+            assertThat(result).isNull(); // fallback에서 null 반환
 
             verify(paymentClient, times(1)).createPayment(any(PaymentCreateReq.class), eq(userId));
             verify(paymentRepository, times(1)).save(any(Payment.class));
@@ -165,55 +120,140 @@ class PaymentServiceTest {
     }
 
     @Nested
-    @DisplayName("결제 상태 업데이트")
-    class CallbackForUpdatePayment {
+    @DisplayName("결제 내역 조회")
+    class GetPaymentInfo {
 
         @Test
-        @DisplayName("성공 - 결제 상태 업데이트")
-        void callbackForUpdatePayment_success() {
+        @DisplayName("성공 - 거래번호로 결제 내역 조회")
+        void getPaymentInfo_success() {
             // given
-            TransactionInfo transactionInfo = new TransactionInfo(
-                transactionKey, orderId, amount, "결제 성공", TransactionStatus.SUCCESS, cardType, cardNo
-            );
+            TransactionDetailResponse transactionDetail = TransactionDetailResponse.builder()
+                .transactionKey(transactionKey)
+                .orderId(orderId)
+                .status(TransactionStatus.SUCCESS)
+                .reason("결제 성공")
+                .build();
+            ApiResponse<TransactionDetailResponse> apiResponse = ApiResponse.success(transactionDetail);
+
+            when(paymentClient.getPaymentInfo(transactionKey, userId))
+                .thenReturn(apiResponse);
 
             // when
-            paymentService.callbackForUpdatePayment(transactionInfo);
+            TransactionDetailResponse result = paymentService.getPaymentInfo(userId, transactionKey);
 
             // then
-            verify(paymentRepository, times(1))
-                .updatePayment(transactionKey, orderId, TransactionStatus.SUCCESS, "결제 성공");
+            assertAll(
+                () -> assertThat(result).isNotNull(),
+                () -> assertThat(result.getTransactionKey()).isEqualTo(transactionKey),
+                () -> assertThat(result.getOrderId()).isEqualTo(orderId),
+                () -> assertThat(result.getStatus()).isEqualTo(TransactionStatus.SUCCESS)
+            );
+
+            verify(paymentClient, times(1)).getPaymentInfo(transactionKey, userId);
+            verify(orderRepository, times(1)).updateOrderStatus(orderId, com.loopers.domain.domainEnum.OrderStatus.ORDER_PAID);
+            verify(paymentRepository, times(1)).updatePayment(transactionKey, orderId, TransactionStatus.SUCCESS, "결제 성공");
         }
 
         @Test
-        @DisplayName("실패 - TransactionInfo가 null인 경우")
-        void callbackForUpdatePayment_failure_null_transaction_info() {
+        @DisplayName("실패 - transactionKey가 null인 경우")
+        void getPaymentInfo_failure_null_transaction_key() {
             // when & then
             CoreException exception = assertThrows(CoreException.class, () -> {
-                paymentService.callbackForUpdatePayment(null);
+                paymentService.getPaymentInfo(userId, null);
             });
 
             assertAll(
                 () -> assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST),
-                () -> assertThat(exception.getMessage()).isEqualTo("transactionInfo object can't be null")
+                () -> assertThat(exception.getMessage()).isEqualTo("transactionKey 는 null이 될수 없습니다")
             );
 
-            verify(paymentRepository, times(0)).updatePayment(anyString(), anyString(), any(), anyString());
+            verify(paymentClient, times(0)).getPaymentInfo(anyString(), anyString());
         }
 
         @Test
-        @DisplayName("성공 - 결제 실패 상태 업데이트")
-        void callbackForUpdatePayment_success_failed_status() {
+        @DisplayName("실패 - PaymentClient API 호출 실패 시 fallback 동작")
+        void getPaymentInfo_failure_api_call_failed_fallback() {
             // given
-            TransactionInfo transactionInfo = new TransactionInfo(
-                transactionKey, orderId, amount, "잔액 부족", TransactionStatus.FAIL, cardType, cardNo
-            );
+            when(paymentClient.getPaymentInfo(transactionKey, userId))
+                .thenThrow(new RuntimeException("API 호출 실패"));
 
             // when
-            paymentService.callbackForUpdatePayment(transactionInfo);
+            TransactionDetailResponse result = paymentService.getPaymentInfo(userId, transactionKey);
 
             // then
-            verify(paymentRepository, times(1))
-                .updatePayment(transactionKey, orderId, TransactionStatus.FAIL, "잔액 부족");
+            assertAll(
+                () -> assertThat(result).isNotNull(),
+                () -> assertThat(result.getTransactionKey()).isEqualTo(transactionKey),
+                () -> assertThat(result.getStatus()).isEqualTo(TransactionStatus.FAIL),
+                () -> assertThat(result.getReason()).contains("Payment gateway unavailable")
+            );
+
+            verify(paymentClient, times(1)).getPaymentInfo(transactionKey, userId);
+        }
+    }
+
+    @Nested
+    @DisplayName("주문번호로 거래번호 조회")
+    class GetTransactionByOrder {
+
+        @Test
+        @DisplayName("성공 - 주문번호로 거래번호 조회")
+        void getTransactionByOrder_success() {
+            // given
+            OrderResponse orderResponse = OrderResponse.builder()
+                .orderId(orderId)
+                .build();
+            ApiResponse<OrderResponse> apiResponse = ApiResponse.success(orderResponse);
+
+            when(paymentClient.getTransactionsByOrder(orderId, userId))
+                .thenReturn(apiResponse);
+
+            // when
+            OrderResponse result = paymentService.getTransactionByOrder(userId, orderId);
+
+            // then
+            assertAll(
+                () -> assertThat(result).isNotNull(),
+                () -> assertThat(result.getOrderId()).isEqualTo(orderId)
+            );
+
+            verify(paymentClient, times(1)).getTransactionsByOrder(orderId, userId);
+        }
+
+        @Test
+        @DisplayName("실패 - orderId가 null인 경우")
+        void getTransactionByOrder_failure_null_order_id() {
+            // when & then
+            CoreException exception = assertThrows(CoreException.class, () -> {
+                paymentService.getTransactionByOrder(userId, null);
+            });
+
+            assertAll(
+                () -> assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST),
+                () -> assertThat(exception.getMessage()).isEqualTo("orderId parameter can't be null")
+            );
+
+            verify(paymentClient, times(0)).getTransactionsByOrder(anyString(), anyString());
+        }
+
+        @Test
+        @DisplayName("실패 - PaymentClient API 호출 실패 시 fallback 동작")
+        void getTransactionByOrder_failure_api_call_failed_fallback() {
+            // given
+            when(paymentClient.getTransactionsByOrder(orderId, userId))
+                .thenThrow(new RuntimeException("API 호출 실패"));
+
+            // when
+            OrderResponse result = paymentService.getTransactionByOrder(userId, orderId);
+
+            // then
+            assertAll(
+                () -> assertThat(result).isNotNull(),
+                () -> assertThat(result.getOrderId()).isEqualTo(orderId),
+                () -> assertThat(result.getTransactions()).isNull()
+            );
+
+            verify(paymentClient, times(1)).getTransactionsByOrder(orderId, userId);
         }
     }
 
@@ -222,7 +262,7 @@ class PaymentServiceTest {
     class DifferentCardTypes {
 
         @Test
-        @DisplayName("성공 - SAMSUNG 카드로 결제 - PG가 이상해서 오류남")
+        @DisplayName("성공 - SAMSUNG 카드로 결제")
         void createPayment_with_samsung_card_success() {
             // given
             CardType samsungCard = CardType.SAMSUNG;
@@ -253,7 +293,7 @@ class PaymentServiceTest {
         }
 
         @Test
-        @DisplayName("성공 - HYUNDAI 카드로 결제 - PG가 이상해서 오류남")
+        @DisplayName("성공 - HYUNDAI 카드로 결제")
         void createPayment_with_hyundai_card_success() {
             // given
             CardType hyundaiCard = CardType.HYUNDAI;

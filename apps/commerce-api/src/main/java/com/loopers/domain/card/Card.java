@@ -2,7 +2,6 @@ package com.loopers.domain.card;
 
 import com.loopers.domain.BaseEntity;
 import com.loopers.interfaces.api.payment.CardType;
-import com.loopers.support.utils.CardNumberUtil;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 
 @Table(
     name = "card",
@@ -40,12 +40,24 @@ public class Card extends BaseEntity {
     @Column(name = "card_no", nullable = false)
     private String cardNo;
 
-    /**
-     * 카드번호를 4자리마다 하이픈(-)을 넣어서 반환
-     * @return 포맷된 카드번호 (예: "1234-5678-9012-3456")
-     */
-    public String getFormattedCardNo() {
-        return CardNumberUtil.formatCardNumber(cardNo);
+    //팩토리 메서드
+    public static Card cardNoWithHyphen(String userId, String cardNo, CardType cardType, String cardName) {
+        return new Card(userId, appendHyphen(cardNo), cardType, cardName);
     }
 
+    //카드 번호 사이에 하이픈 추가
+    private static String appendHyphen(String cardNo){
+        if(cardNo.length() != 16 || StringUtils.isEmpty(cardNo)){
+            return cardNo;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for(int i =0; i < cardNo.length(); i++){
+            if(i % 4 == 0 && i != 0){
+                sb.append("-");
+            }
+            sb.append(cardNo.charAt(i));
+        }
+        return sb.toString();
+    }
 }

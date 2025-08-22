@@ -19,6 +19,7 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -26,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 @Table(name = "orders")
 @NoArgsConstructor
 @Getter
+@Setter
 public class Order extends BaseEntity {
 
     @Column(name = "order_no", nullable = false, unique = true)
@@ -64,8 +66,30 @@ public class Order extends BaseEntity {
         BigDecimal safeDiscountPrice = getDiscountPrice(discountPrice);
         BigDecimal totalAmount = applyDiscountPrice(totalPrice, safeDiscountPrice);
 
-        return new Order(orderNo, userId, OrderStatus.ORDER_PLACED, totalAmount, orderDetailList, couponNo, safeDiscountPrice);
+        Order order = new Order(orderNo, userId, OrderStatus.ORDER_PLACED, totalAmount, orderDetailList, couponNo, safeDiscountPrice);
+
+        // 양방향 관계 설정
+        if (orderDetailList != null) {
+            orderDetailList.forEach(order::addOrderDetail); // 반드시 편의 메서드 사용
+
+        }
+
+        return order;
     }
+
+    // 연관관계 편의 메서드 - 양방향 세팅 보장
+    public void addOrderDetail(OrderDetail detail) {
+        if (detail == null) return;
+        orderDetailList.add(detail);
+        detail.setOrder(this);
+    }
+
+    public void removeOrderDetail(OrderDetail detail) {
+        if (detail == null) return;
+        orderDetailList.remove(detail);
+        detail.setOrder(null);
+    }
+
 
     /**
      * 할인후 최종금액 계산
@@ -87,10 +111,10 @@ public class Order extends BaseEntity {
         if (ObjectUtils.isEmpty(orderDetails)) {
             throw new CoreException(ErrorType.BAD_REQUEST, "주문하려는 물품은 필수입니다");
         }
-        if(StringUtils.isEmpty(couponNo) && !ObjectUtils.isEmpty(discountPrice)
-            || !StringUtils.isEmpty(couponNo) && ObjectUtils.isEmpty(discountPrice)){
+/*        if(StringUtils.isEmpty(couponNo) && discountPrice.compareTo(BigDecimal.ZERO) <= 0
+            || StringUtils.isNotEmpty(couponNo) && discountPrice.compareTo(BigDecimal.ZERO) > 0){
             throw new CoreException(ErrorType.BAD_REQUEST, "쿠폰이 정상 적용되지 않았습니다");
-        }
+        }*/
     }
 
     /**

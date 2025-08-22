@@ -44,12 +44,14 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     }
 
     /**
-     * 결제정보 업데이트
+     * PG 결제 완료 후 결제 테이블 업데이트
      * @param transactionId
+     * @param orderId
      * @param status
+     * @param reason
      */
     @Override
-    public void updatePayment(String transactionId, String orderId, TransactionStatus status, String reason){
-
+    public void updatePayment(String transactionId, String orderId, TransactionStatus status, String reason) {
+        paymentJpaRepository.updateByOrderIdAndTransactionKey(transactionId, orderId, status, reason);
     }
 }

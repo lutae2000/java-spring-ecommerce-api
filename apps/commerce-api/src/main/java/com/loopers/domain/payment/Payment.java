@@ -27,13 +27,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Payment extends BaseEntity {
 
-    @Column(name = "transaction_key", nullable = false, unique = true)
+    @Column(name = "transaction_key")
     private String transactionKey;
 
     @Column(name = "user_id", nullable = false)
     private String userId;
 
-    @Column(name = "order_id", nullable = false)
+    @Column(name = "order_id", nullable = false, unique = true)
     private String orderId;
 
     @Column(name = "card_type", nullable = false)
@@ -45,7 +45,7 @@ public class Payment extends BaseEntity {
     @Column(name = "amount", nullable = false)
     private Long amount;
 
-    @Column(name = "callback_url", nullable = false)
+    @Column(name = "callback_url")
     private String callbackUrl;
 
     @Enumerated(EnumType.STRING)

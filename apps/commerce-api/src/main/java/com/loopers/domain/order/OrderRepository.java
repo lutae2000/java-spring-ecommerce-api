@@ -1,6 +1,7 @@
 package com.loopers.domain.order;
 
 import com.loopers.domain.BaseEntity;
+import com.loopers.domain.domainEnum.OrderStatus;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,4 +25,9 @@ public interface OrderRepository {
      * @return
      */
     List<Order> findAllOrderByUserId(String userId);
+
+    /**
+     * 결제 완료후 주문상태 변경
+     */
+    void updateOrderStatus(String orderNo, OrderStatus orderStatus);
 }

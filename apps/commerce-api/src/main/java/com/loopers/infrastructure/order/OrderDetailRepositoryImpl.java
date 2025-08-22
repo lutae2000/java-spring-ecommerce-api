@@ -12,14 +12,14 @@ public class OrderDetailRepositoryImpl implements OrderDetailRepository {
     private final OrderDetailJpaRepository orderDetailJpaRepository;
 
     /**
-     * 주문 상세 저장
-     * @param orderDetailList
+     * 주문 상세 목록 저장
+     * @param orderDetails
      */
     @Override
-    public void OrderDetailSave(List<OrderDetail> orderDetail) {
-        orderDetailJpaRepository.saveAll(orderDetail);
+    public void saveAll(List<OrderDetail> orderDetails) {
+        orderDetailJpaRepository.saveAll(orderDetails);
     }
-
+    
     /**
      * 주문 상세 조회
      * @param orderId
@@ -27,7 +27,7 @@ public class OrderDetailRepositoryImpl implements OrderDetailRepository {
      * @return
      */
     @Override
-    public List<OrderDetail> findByOrderNoAndUserId(Long orderNo, String userId) {
-        return orderDetailJpaRepository.findByOrderNoAndUserId(orderNo, userId);
+    public List<OrderDetail> findByOrderId(String orderId) {
+        return orderDetailJpaRepository.findByOrderId(orderId);
     }
 }
