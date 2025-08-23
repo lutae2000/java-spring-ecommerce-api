@@ -10,6 +10,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -32,16 +33,30 @@ public class OrderDetail extends BaseEntity {
 
     private BigDecimal unitPrice;
 
-    public OrderDetail(String productId, Long quantity, BigDecimal unitPrice) {
+    @Builder
+    public OrderDetail(Order order, String productId, Long quantity, BigDecimal unitPrice) {
         validateOrderDetail(productId, quantity, unitPrice);
+        this.order = order;
         this.productId = productId;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
     }
 
+    /**
+     * Order 객체 설정 (양방향 관계 설정용)
+     */
+    public void setOrder(Order order) {
+        this.order = order;
+    }
+
     //Factory Method
     public static OrderDetail CreateOrderDetail(String productId, Long quantity, BigDecimal unitPrice){
-        return new OrderDetail(productId, quantity, unitPrice);
+        return new OrderDetail(null, productId, quantity, unitPrice);
+    }
+
+    //Factory Method with Order
+    public static OrderDetail CreateOrderDetail(Order order, String productId, Long quantity, BigDecimal unitPrice){
+        return new OrderDetail(order, productId, quantity, unitPrice);
     }
 
     private void validateOrderDetail(String productId, Long quantity, BigDecimal unitPrice){
@@ -55,20 +70,4 @@ public class OrderDetail extends BaseEntity {
             throw new CoreException(ErrorType.BAD_REQUEST, "주문수량은 1개 이상이어야 합니다");
         }
     }
-
-    public void setOrder(Order order) {
-        // 기존 관계 제거
-        if (this.order != null) {
-            this.order.getOrderDetailList().remove(this);
-        }
-        
-        // 새로운 관계 설정
-        this.order = order;
-        
-        // 양방향 관계 설정
-        if (order != null && !order.getOrderDetailList().contains(this)) {
-            order.getOrderDetailList().add(this);
-        }
-    }
-
 }

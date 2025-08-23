@@ -32,8 +32,8 @@ public class OrderServiceTest {
 
             // given
             List<OrderDetail> items = List.of(
-                new OrderDetail("A0003", 2L, BigDecimal.valueOf(100000)),
-                new OrderDetail("A0004", 1L, BigDecimal.valueOf(200000))
+                OrderDetail.CreateOrderDetail("A0003", 2L, BigDecimal.valueOf(100000)),
+                OrderDetail.CreateOrderDetail("A0004", 1L, BigDecimal.valueOf(200000))
             );
 
             String userId = "utlee";
@@ -54,8 +54,8 @@ public class OrderServiceTest {
 
             // given
             List<OrderDetail> items = List.of(
-                new OrderDetail("A0003", 24L, BigDecimal.valueOf(0)),
-                new OrderDetail("A0004", 10L, BigDecimal.valueOf(0))
+                OrderDetail.CreateOrderDetail("A0003", 24L, BigDecimal.valueOf(0)),
+                OrderDetail.CreateOrderDetail("A0004", 10L, BigDecimal.valueOf(0))
             );
 
             String userId = "utlee";
@@ -77,14 +77,14 @@ public class OrderServiceTest {
         void orderSubmit_fail_not_exist_user() {
             // given
             List<OrderDetail> items = List.of(
-                new OrderDetail("A0003", 24L, BigDecimal.valueOf(0)),
-                new OrderDetail("A0004", 10L, BigDecimal.valueOf(0))
+                OrderDetail.CreateOrderDetail("A0003", 24L, BigDecimal.valueOf(0)),
+                OrderDetail.CreateOrderDetail("A0004", 10L, BigDecimal.valueOf(0))
             );
 
             // when
             CoreException response = assertThrows(CoreException.class, () -> {
                 Order order = Order.createOrder(null, items, null, null);
-                OrderInfo orderInfo = orderService.placeOrder(null, order, null);
+                orderService.placeOrder(null, order, null);
             });
             // then
             assertAll(
@@ -105,7 +105,7 @@ public class OrderServiceTest {
             // when & then - Order 생성자에서 물품 검증
             CoreException response = assertThrows(CoreException.class, () -> {
                 Order order = Order.createOrder(userId, items, null, null);
-                OrderInfo orderInfo = orderService.placeOrder(userId, order, null);
+                orderService.placeOrder(userId, order, null);
             });
 
             // then
@@ -120,7 +120,7 @@ public class OrderServiceTest {
 
             // when
             CoreException response = assertThrows(CoreException.class, () -> {
-                new OrderDetail("product1", 0L, BigDecimal.valueOf(5000)); // 수량 0개
+                OrderDetail.CreateOrderDetail("product1", 0L, BigDecimal.valueOf(5000)); // 수량 0개
             });
 
             // then
@@ -135,7 +135,7 @@ public class OrderServiceTest {
 
             // when
             CoreException response = assertThrows(CoreException.class, () -> {
-                OrderDetail.CreateOrderDetail("A0003", 0L, BigDecimal.valueOf(1000)); // 음수 가격
+                OrderDetail.CreateOrderDetail("A0003", 0L, BigDecimal.valueOf(1000)); // 0개 수량
             });
 
             // then
@@ -153,7 +153,7 @@ public class OrderServiceTest {
 
             // when - OrderDetail 생성자에서 수량 검증
             CoreException response = assertThrows(CoreException.class, () -> {
-                new OrderDetail(productId, invalidQuantity, unitPrice);
+                OrderDetail.CreateOrderDetail(productId, invalidQuantity, unitPrice);
             });
 
             // then
@@ -161,27 +161,27 @@ public class OrderServiceTest {
             assertThat(response.getMessage()).isEqualTo("주문수량은 1개 이상이어야 합니다");
         }
 
-        @DisplayName("쿠폰이 정상 적용되지 않았습니다 - 400에러")
+        @DisplayName("할인금액이 음수인 경우 - 400에러")
         @Test
-        void orderSubmit_fail_discount_amount_mismatch() {
+        void orderSubmit_fail_negative_discount_amount() {
             // given
             List<OrderDetail> items = List.of(
-                new OrderDetail("A0003", 2L, BigDecimal.valueOf(1000)),
-                new OrderDetail("A0004", 1L, BigDecimal.valueOf(2000))
+                OrderDetail.CreateOrderDetail("A0003", 2L, BigDecimal.valueOf(1000)),
+                OrderDetail.CreateOrderDetail("A0004", 1L, BigDecimal.valueOf(2000))
             );
 
             String userId = "utlee";
-            BigDecimal discountPrice = BigDecimal.valueOf(1000);
+            BigDecimal negativeDiscountPrice = BigDecimal.valueOf(-1000);
 
             CoreException response = assertThrows(CoreException.class, () -> {
-                Order order = Order.createOrder(userId, items, null, discountPrice);
-                orderService.placeOrder(userId, order, discountPrice);
+                Order order = Order.createOrder(userId, items, null, negativeDiscountPrice);
+                orderService.placeOrder(userId, order, negativeDiscountPrice);
             });
 
             // then
             assertAll(
                 () -> assertThat(response.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST),
-                () -> assertThat(response.getMessage()).isEqualTo("쿠폰이 정상 적용되지 않았습니다")
+                () -> assertThat(response.getMessage()).isEqualTo("할인금액은 마이너스일 수 없습니다")
             );
         }
     }
@@ -231,7 +231,7 @@ public class OrderServiceTest {
             // given
             String userId = "utlee";
             List<OrderDetail> items = List.of(
-                new OrderDetail("A0003", 1L, BigDecimal.valueOf(10000))
+                OrderDetail.CreateOrderDetail("A0003", 1L, BigDecimal.valueOf(10000))
             );
             Order order = Order.createOrder(userId, items, null, null);
             OrderInfo createdOrder = orderService.placeOrder(userId, order, null);
@@ -257,7 +257,7 @@ public class OrderServiceTest {
             String nonExistentOrderNo = "NON_EXISTENT_ORDER";
 
             // when & then
-            assertThrows(Exception.class, () -> {
+            assertThrows(CoreException.class, () -> {
                 orderService.findOrderInfoByOrderNo(userId, nonExistentOrderNo);
             });
         }
@@ -269,14 +269,14 @@ public class OrderServiceTest {
             String userId = "utlee";
             String otherUserId = "other_user";
             List<OrderDetail> items = List.of(
-                new OrderDetail("A0003", 1L, BigDecimal.valueOf(10000))
+                OrderDetail.CreateOrderDetail("A0003", 1L, BigDecimal.valueOf(10000))
             );
             Order order = Order.createOrder(userId, items, null, null);
             OrderInfo createdOrder = orderService.placeOrder(userId, order, null);
             String orderNo = createdOrder.getOrder().getOrderNo();
 
             // when & then
-            assertThrows(Exception.class, () -> {
+            assertThrows(CoreException.class, () -> {
                 orderService.findOrderInfoByOrderNo(otherUserId, orderNo);
             });
         }
@@ -291,8 +291,8 @@ public class OrderServiceTest {
         void orderSubmit_with_coupon_success() {
             // given
             List<OrderDetail> items = List.of(
-                new OrderDetail("A0003", 2L, BigDecimal.valueOf(10000)),
-                new OrderDetail("A0004", 1L, BigDecimal.valueOf(20000))
+                OrderDetail.CreateOrderDetail("A0003", 2L, BigDecimal.valueOf(10000)),
+                OrderDetail.CreateOrderDetail("A0004", 1L, BigDecimal.valueOf(20000))
             );
             String userId = "utlee";
             String couponNo = "COUPON001";
@@ -322,7 +322,7 @@ public class OrderServiceTest {
         void orderSubmit_with_high_discount_success() {
             // given
             List<OrderDetail> items = List.of(
-                new OrderDetail("A0003", 1L, BigDecimal.valueOf(1000))
+                OrderDetail.CreateOrderDetail("A0003", 1L, BigDecimal.valueOf(1000))
             );
             String userId = "utlee";
             String couponNo = "COUPON002";
@@ -351,8 +351,8 @@ public class OrderServiceTest {
         void orderSubmit_with_order_details_success() {
             // given
             List<OrderDetail> items = List.of(
-                new OrderDetail("A0003", 2L, BigDecimal.valueOf(10000)),
-                new OrderDetail("A0004", 1L, BigDecimal.valueOf(20000))
+                OrderDetail.CreateOrderDetail("A0003", 2L, BigDecimal.valueOf(10000)),
+                OrderDetail.CreateOrderDetail("A0004", 1L, BigDecimal.valueOf(20000))
             );
             String userId = "utlee";
 

@@ -45,8 +45,8 @@ public interface CouponJpaRepository extends JpaRepository<Coupon, Long> {
      * @param coupon
      * @return
      */
-    @Query("update Coupon c set c.useYn = true where c.couponNo = :couponNo and c.userId = :userId and c.useYn = false")
+    @Query("update Coupon c set c.useYn = :useYn where c.couponNo = :couponNo and c.userId = :userId")
     @Modifying
-    int updateCouponUseYn(@Param("userId") String userId, @Param("couponNo") String couponNo);
+    int updateCouponUseYn(@Param("userId") String userId, @Param("couponNo") String couponNo, @Param("useYn") Boolean useYn);
 
 }

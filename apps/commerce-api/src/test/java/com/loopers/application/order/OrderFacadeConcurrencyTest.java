@@ -137,7 +137,7 @@ public class OrderFacadeConcurrencyTest {
                     );
 
                     OrderCriteria.CreateOrder criteria = new OrderCriteria.CreateOrder(
-                        userId, orderDetails, couponNo, BigDecimal.valueOf(400) // 10% 할인
+                        userId, orderDetails, couponNo, null, BigDecimal.valueOf(400) // 10% 할인
                     );
 
                     orderFacade.placeOrder(criteria);
@@ -180,7 +180,7 @@ public class OrderFacadeConcurrencyTest {
                     );
 
                     OrderCriteria.CreateOrder criteria = new OrderCriteria.CreateOrder(
-                        userId, orderDetails, null, null
+                        userId, orderDetails, null, null, null
                     );
 
                     orderFacade.placeOrder(criteria);
@@ -222,7 +222,7 @@ public class OrderFacadeConcurrencyTest {
                     );
 
                     OrderCriteria.CreateOrder criteria = new OrderCriteria.CreateOrder(
-                        userId, orderDetails, null, null
+                        userId, orderDetails, null, null, null
                     );
 
                     orderFacade.placeOrder(criteria);
@@ -264,7 +264,7 @@ public class OrderFacadeConcurrencyTest {
                     );
 
                     OrderCriteria.CreateOrder criteria = new OrderCriteria.CreateOrder(
-                        userId, orderDetails, couponNo, BigDecimal.valueOf(100) // 10% 할인
+                        userId, orderDetails, couponNo, null, BigDecimal.valueOf(100) // 10% 할인
                     );
 
                     orderFacade.placeOrder(criteria);

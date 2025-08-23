@@ -1,10 +1,16 @@
 package com.loopers.application.payment;
 
+import com.loopers.domain.order.OrderDetail;
+import com.loopers.domain.order.OrderInfo;
+import com.loopers.domain.order.OrderService;
 import com.loopers.domain.payment.OrderResponse;
 import com.loopers.domain.payment.PaymentInfo;
+import com.loopers.domain.payment.PaymentRepository;
 import com.loopers.domain.payment.PaymentService;
 import com.loopers.domain.payment.TransactionDetailResponse;
+import com.loopers.domain.product.ProductService;
 import com.loopers.interfaces.api.payment.PaymentDto.CreateCallbackRequest;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -15,6 +21,8 @@ import org.springframework.stereotype.Component;
 public class PaymentFacade {
     
     private final PaymentService paymentService;
+    private final ProductService productService;
+    private final OrderService orderService;
 
     /**
      * 결제 생성

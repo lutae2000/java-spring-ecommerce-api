@@ -69,16 +69,13 @@ public class Order extends BaseEntity {
 
         Order order = new Order(orderNo, userId, OrderStatus.ORDER_PLACED, totalAmount, orderDetailList, couponNo, safeDiscountPrice);
 
+        // OrderDetail에 Order 객체 설정 (양방향 관계 설정)
+        if (orderDetailList != null) {
+            orderDetailList.forEach(orderDetail -> orderDetail.setOrder(order));
+        }
+
         return order;
     }
-
-
-    public void removeOrderDetail(OrderDetail detail) {
-        if (detail == null) return;
-        orderDetailList.remove(detail);
-        detail.setOrder(null);
-    }
-
 
     /**
      * 할인후 최종금액 계산

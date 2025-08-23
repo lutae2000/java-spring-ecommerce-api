@@ -74,33 +74,14 @@ public class CouponService {
      * @return
      */
     @Transactional
-    public void updateCouponUseYn(CouponCommand couponCommand){
+    public Coupon updateCouponUseYn(CouponCommand couponCommand){
         Coupon coupon = this.getCouponByCouponNo(couponCommand.couponNo());
 
-        if(ObjectUtils.isNotEmpty(coupon)){
-            int updatedRows = couponRepository.updateCouponUseYn(couponCommand);
-            if(updatedRows == 0) {
-                throw new CoreException(ErrorType.BAD_REQUEST, "이미 사용된 쿠폰입니다");
-            }
+        if(Boolean.FALSE.equals(coupon.getUseYn())){
+            couponRepository.updateCouponUseYn(couponCommand);
+        } else {
+            throw new CoreException(ErrorType.BAD_REQUEST, "이미 사용된 쿠폰입니다");
         }
-    }
-
-    /**
-     * 쿠폰 조회 및 사용을 하나의 트랜잭션으로 처리
-     * @param couponCommand
-     * @return 사용된 쿠폰 정보
-     */
-    @Transactional
-    public Coupon getCouponAndUse(CouponCommand couponCommand) {
-        Coupon coupon = this.getCouponByCouponNo(couponCommand.couponNo());
-        
-        if(ObjectUtils.isNotEmpty(coupon)){
-            int updatedRows = couponRepository.updateCouponUseYn(couponCommand);
-            if(updatedRows == 0) {
-                throw new CoreException(ErrorType.BAD_REQUEST, "이미 사용된 쿠폰입니다");
-            }
-        }
-        
         return coupon;
     }
 

@@ -4,6 +4,7 @@ import com.loopers.domain.BaseEntity;
 import com.loopers.domain.domainEnum.OrderStatus;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.repository.query.Param;
 
 public interface OrderRepository {
 
@@ -30,4 +31,9 @@ public interface OrderRepository {
      * 결제 완료후 주문상태 변경
      */
     int updateOrderStatus(String orderNo, OrderStatus orderStatus);
+
+    /**
+     * PG결제 요청을 해야할 리스트 조회
+     */
+    List<String> selectOrderNoByOrderStatus(OrderStatus orderStatus);
 }

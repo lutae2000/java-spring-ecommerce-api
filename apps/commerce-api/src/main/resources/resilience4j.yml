@@ -20,7 +20,7 @@ resilience4j:
         slow-call-rate-threshold: 30
         # 예외를 실패로 간주할지 여부
         record-exceptions:
-          - java.lang.Exception
+#          - java.lang.Exception
           - java.net.SocketTimeoutException
           - java.net.ConnectException
           - feign.FeignException

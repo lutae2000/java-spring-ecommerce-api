@@ -37,4 +37,10 @@ public interface OrderJpaRepository extends JpaRepository<Order, Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update Order o set o.orderStatus = :orderStatus, o.updatedAt = CURRENT_TIMESTAMP where o.orderNo = :orderId")
     int updateOrderStatus(@Param("orderId") String orderId, @Param("orderStatus") OrderStatus orderStatus);
+
+    /**
+     * PG결제 요청을 해야할 리스트 조회
+     */
+    @Query("SELECT o.orderNo FROM Order o WHERE o.orderStatus = :orderStatus")
+    List<String> selectOrderNoByOrderStatus(@Param("orderStatus") OrderStatus orderStatus);
 }

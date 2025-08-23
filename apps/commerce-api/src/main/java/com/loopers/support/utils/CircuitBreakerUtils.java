@@ -178,25 +178,4 @@ public class CircuitBreakerUtils {
         });
     }
 
-    /**
-     * Circuit Breaker 상태 요약 정보 반환
-     * @param serviceName 서비스 이름
-     * @return 상태 요약 정보
-     */
-    public String getCircuitBreakerSummary(String serviceName) {
-        try {
-            CircuitBreaker circuitBreaker = circuitBreakerRegistry.circuitBreaker(serviceName);
-            CircuitBreaker.Metrics metrics = circuitBreaker.getMetrics();
-            
-            return String.format("Circuit Breaker [%s] - State: %s, Failure Rate: %.2f%%, Total: %d, Failed: %d, Success: %d",
-                serviceName,
-                circuitBreaker.getState(),
-                metrics.getFailureRate(),
-                metrics.getNumberOfSuccessfulCalls() + circuitBreaker.getMetrics().getNumberOfFailedCalls(),
-                metrics.getNumberOfFailedCalls(),
-                metrics.getNumberOfSuccessfulCalls());
-        } catch (Exception e) {
-            return String.format("Circuit Breaker [%s] - Error: %s", serviceName, e.getMessage());
-        }
-    }
 }

@@ -165,6 +165,7 @@ public class OrderV1ApiE2ETest {
                     new OrderDto.OrderDetailRequest("PROD002", 1L, BigDecimal.valueOf(20000))
                 ),
                 null,
+                null,
                 null
             );
 
@@ -197,6 +198,7 @@ public class OrderV1ApiE2ETest {
                     new OrderDto.OrderDetailRequest("PROD002", 1L, BigDecimal.valueOf(20000))
                 ),
                 "COUPON001",
+                null,
                 BigDecimal.valueOf(5000)
             );
 
@@ -226,6 +228,7 @@ public class OrderV1ApiE2ETest {
                     new OrderDto.OrderDetailRequest("PROD001", 1L, BigDecimal.valueOf(10000))
                 ),
                 null,
+                null,
                 null
             );
             HttpHeaders emptyHeaders = new HttpHeaders();
@@ -254,6 +257,7 @@ public class OrderV1ApiE2ETest {
                     new OrderDto.OrderDetailRequest("INVALID_PRODUCT", 1L, BigDecimal.valueOf(10000))
                 ),
                 null,
+                null,
                 null
             );
 
@@ -280,6 +284,7 @@ public class OrderV1ApiE2ETest {
                 List.of(
                     new OrderDto.OrderDetailRequest("PROD001", 0L, BigDecimal.valueOf(10000)) // 수량이 0
                 ),
+                null,
                 null,
                 null
             );
@@ -312,6 +317,7 @@ public class OrderV1ApiE2ETest {
                 List.of(
                     new OrderDto.OrderDetailRequest("PROD001", 1L, BigDecimal.valueOf(10000))
                 ),
+                null,
                 null,
                 null
             );
@@ -397,6 +403,7 @@ public class OrderV1ApiE2ETest {
                 List.of(
                     new OrderDto.OrderDetailRequest("PROD001", 1L, BigDecimal.valueOf(10000))
                 ),
+                null,
                 null,
                 null
             );
@@ -485,6 +492,7 @@ public class OrderV1ApiE2ETest {
                     new OrderDto.OrderDetailRequest("PROD002", 1L, BigDecimal.valueOf(20000))
                 ),
                 "COUPON001",
+                null,
                 BigDecimal.valueOf(5000)
             );
 

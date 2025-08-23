@@ -3,6 +3,7 @@ package com.loopers.infrastructure.product;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.loopers.application.product.ProductPageResult;
 import com.loopers.config.redis.RedisCacheTemplate;
+import com.loopers.domain.domainEnum.OrderStatus;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductInfo;
 import com.loopers.domain.product.ProductRepository;
@@ -110,10 +111,17 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public void orderProduct(String productId, Long quantity) {
+    public void updateProduct(String productId, Long quantity, OrderStatus orderStatus) {
 
         Product product = productJPARepository.findProductByCodeForUpdate(productId);
-        product.setQuantity(product.getQuantity() - quantity);
+
+        //주문시
+        if(orderStatus.equals(OrderStatus.ORDER_PLACED) && product.getQuantity() > quantity){
+            product.setQuantity(product.getQuantity() - quantity);
+        } else if(orderStatus.equals(OrderStatus.ORDER_CANCEL)){
+            product.setQuantity(product.getQuantity() + quantity);
+        }
+
         productJPARepository.save(product);
     }
 

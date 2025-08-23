@@ -12,6 +12,7 @@ public class OrderCriteria {
         String userId,
         List<OrderDetailRequest> orderDetails,
         String couponNo,
+        BigDecimal usePoint,
         BigDecimal discountAmount
     ) {}
 
