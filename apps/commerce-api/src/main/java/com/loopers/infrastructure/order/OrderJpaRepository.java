@@ -21,7 +21,7 @@ public interface OrderJpaRepository extends JpaRepository<Order, Long> {
      * 주문서 조회
      */
     @Query("SELECT o FROM Order o WHERE o.userId = :userId AND o.orderNo = :orderNo")
-    Optional<Order> findByOrderNo(String userId, String orderNo);
+    Optional<Order> findByOrderNo(@Param("userId") String userId, @Param("orderNo") String orderNo);
 
     /**
      * 특정 회원이 주문한 모든 주문서
@@ -29,7 +29,7 @@ public interface OrderJpaRepository extends JpaRepository<Order, Long> {
      * @return
      */
     @Query("SELECT o FROM Order o WHERE o.userId = :userId")
-    List<Order> findAllByUserId(String userId);
+    List<Order> findAllByUserId(@Param("userId") String userId);
 
     /**
      *  주문상태 변경

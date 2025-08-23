@@ -16,9 +16,8 @@ import lombok.NoArgsConstructor;
 @Table(
     name = "payment",
     indexes = {
-        @Index(name = "idx_payment_user_transaction", columnList = "user_id, transaction_key"),
-        @Index(name = "idx_payment_order_no", columnList = "user_id, order_id"),
-        @Index(name = "idx_payment_order_no_transaction", columnList = "user_id, order_id, transaction_key", unique = true)
+        @Index(name = "idx_payment_order_no", columnList = "user_id, order_id", unique = true),
+        @Index(name = "idx_payment_order_no_transaction", columnList = "user_id, order_id, transaction_key")
     }
 )
 @Entity

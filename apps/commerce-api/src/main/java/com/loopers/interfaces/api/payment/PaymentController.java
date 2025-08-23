@@ -6,6 +6,7 @@ import com.loopers.domain.payment.OrderResponse;
 import com.loopers.domain.payment.PaymentInfo;
 import com.loopers.domain.payment.TransactionDetailResponse;
 import com.loopers.interfaces.api.ApiResponse;
+import com.loopers.interfaces.api.payment.PaymentDto.CreateCallbackRequest;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import com.loopers.support.header.CustomHeader;
@@ -118,5 +119,11 @@ public class PaymentController {
         return ApiResponse.success(PaymentOrderDto.Response.from(response));
     }
 
-
+    @PostMapping("/callback")
+    public void callbackProcess(
+        @RequestBody CreateCallbackRequest createCallbackRequest
+    ){
+        log.info("Callback API called - createCallbackRequest: {}", createCallbackRequest);
+        paymentFacade.callbackProcess(createCallbackRequest);
+    }
 }

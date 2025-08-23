@@ -4,6 +4,7 @@ import com.loopers.domain.payment.OrderResponse;
 import com.loopers.domain.payment.PaymentInfo;
 import com.loopers.domain.payment.PaymentService;
 import com.loopers.domain.payment.TransactionDetailResponse;
+import com.loopers.interfaces.api.payment.PaymentDto.CreateCallbackRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -24,21 +25,27 @@ public class PaymentFacade {
         log.info("Payment creation requested - userId: {}, orderId: {}, amount: {}", 
             criteria.userId(), criteria.orderId(), criteria.amount());
         
-        PaymentInfo paymentInfo = paymentService.createPayment(
-            criteria.userId(), 
-            criteria.orderId(), 
-            criteria.amount(), 
-            criteria.cardType(), 
-            criteria.cardNo()
-        );
-        
-        if (paymentInfo == null) {
-            log.warn("Payment creation failed - userId: {}, orderId: {}", criteria.userId(), criteria.orderId());
-        } else {
-            log.info("Payment created successfully - transactionKey: {}", paymentInfo.getTransactionKey());
+        try {
+            PaymentInfo paymentInfo = paymentService.createPayment(
+                criteria.userId(), 
+                criteria.orderId(), 
+                criteria.amount(), 
+                criteria.cardType(), 
+                criteria.cardNo()
+            );
+            
+            if (paymentInfo == null) {
+                log.warn("Payment creation failed - userId: {}, orderId: {}", criteria.userId(), criteria.orderId());
+            } else {
+                log.info("Payment created successfully - transactionKey: {}", paymentInfo.getTransactionKey());
+            }
+            
+            return paymentInfo;
+        } catch (Exception e) {
+            log.error("Payment creation failed with exception - userId: {}, orderId: {}, error: {}", 
+                criteria.userId(), criteria.orderId(), e.getMessage());
+            throw e; // 예외를 다시 던져서 Circuit Breaker가 감지할 수 있도록 함
         }
-        
-        return paymentInfo;
     }
 
     /**
@@ -75,5 +82,16 @@ public class PaymentFacade {
         
         log.info("Transaction retrieved by order - orderId: {}", response.getOrderId());
         return response;
+    }
+
+    /**
+     * PG 콜백받았을때 후속처리
+     * @param createCallbackRequest
+     */
+    public void callbackProcess(CreateCallbackRequest createCallbackRequest) {
+        log.info("Callback API called - object: {}", createCallbackRequest);
+        paymentService.updatePaymentStatus(
+            createCallbackRequest.transactionKey(), createCallbackRequest.orderId(), createCallbackRequest.status(), createCallbackRequest.reason()
+        );
     }
 }

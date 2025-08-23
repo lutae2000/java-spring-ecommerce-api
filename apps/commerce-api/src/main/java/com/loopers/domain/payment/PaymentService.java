@@ -8,13 +8,13 @@ import com.loopers.interfaces.api.payment.PaymentClient;
 import com.loopers.interfaces.api.payment.PaymentCreateReq;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
+import com.loopers.support.utils.CircuitBreakerUtils;
 import com.loopers.support.utils.StringUtil;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +26,8 @@ public class PaymentService {
     private final PaymentClient paymentClient;
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
+
+    private final CircuitBreakerUtils circuitBreakerUtils;
 
     /**
      * 주문 생성
@@ -40,8 +42,19 @@ public class PaymentService {
     @CircuitBreaker(name = "paymentService", fallbackMethod = "createPaymentFallback")
     public PaymentInfo createPayment(String userId, String orderId, Long amount, CardType cardType, String cardNo) {
 
+        log.info("=== Payment Service Called ===");
+        log.info("userId: {}, orderId: {}, amount: {}", userId, orderId, amount);
+
+        circuitBreakerUtils.logCircuitBreakerStatus("paymentService");
+
+        // 테스트용: 특정 조건에서 강제로 예외 발생
+        if ("FAIL".equals(orderId)) {
+            log.error("Forcing RuntimeException for testing circuit breaker");
+            throw new RuntimeException("Test failure for circuit breaker");
+        }
+
         try{
-            String callbackUrl = "http://localhost:8080/api/v1/payment/callback";
+            String callbackUrl = "http://localhost:8080/api/v1/payments/callback";
 
             PaymentCreateReq req = PaymentCreateReq.builder()
                 .orderId(orderId)
@@ -69,9 +82,12 @@ public class PaymentService {
 
             Payment savedPayment = paymentRepository.save(payment);
             return PaymentInfo.from(savedPayment);
-        }catch (Exception e){
-            log.error("Payment create failed: {}", e.getMessage());
-            throw e; // 예외를 다시 던져서 retry와 circuit breaker가 동작하도록 함
+        } catch (CoreException e) {
+            log.error("Payment business error: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Payment system error: {}", e.getMessage());
+            throw e;
         }
     }
 
@@ -91,7 +107,7 @@ public class PaymentService {
             amount,
             null,
             TransactionStatus.FAIL,
-            e.getMessage()
+            null
         );
 
         paymentRepository.save(payment);
@@ -105,7 +121,6 @@ public class PaymentService {
      */
     @Retry(name = "paymentService", fallbackMethod = "getPaymentInfoFallback")
     @CircuitBreaker(name = "paymentService", fallbackMethod = "getPaymentInfoFallback")
-    @Transactional
     public TransactionDetailResponse getPaymentInfo(String userId, String transactionKey){
 
         if (StringUtils.isEmpty(transactionKey)) {
@@ -117,14 +132,34 @@ public class PaymentService {
 
             //응답이 정상 승인된 경우 Order 테이블 업데이트
             if(response.data().getStatus() == TransactionStatus.SUCCESS){
-                orderRepository.updateOrderStatus(response.data().getOrderId(), OrderStatus.ORDER_PAID);
-                paymentRepository.updatePayment(transactionKey, response.data().getOrderId(), TransactionStatus.SUCCESS, response.data().getReason());
+                updatePaymentStatus(transactionKey, response.data().getOrderId(), TransactionStatus.SUCCESS, response.data().getReason());
             }
 
             return response.data();
         } catch (Exception e){
             log.error("Payment 정보 조회 실패: {}", e.getMessage());
             throw e;
+        }
+    }
+
+    /**
+     * 결제완료 상태로 변경
+     * @param transactionKey
+     * @param orderId
+     * @param status
+     * @param reason
+     */
+    @Transactional
+    public void updatePaymentStatus(String transactionKey, String orderId, TransactionStatus status, String reason){
+
+        int orderUpdated = orderRepository.updateOrderStatus(orderId, OrderStatus.ORDER_PAID);
+        int paymentUpdated = paymentRepository.updatePayment(transactionKey, orderId, status, reason);
+
+        if (orderUpdated == 0) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "주문 상태 업데이트에 실패했습니다: " + orderId);
+        }
+        if (paymentUpdated == 0) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "결제 정보 업데이트에 실패했습니다: " + transactionKey);
         }
     }
 

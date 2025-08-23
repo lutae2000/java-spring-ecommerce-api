@@ -72,7 +72,7 @@ class PaymentServiceTest {
 
             Payment savedPayment = new Payment(
                 transactionKey, userId, orderId, cardType, cardNo, amount,
-                "http://localhost:8080/api/v1/payment/callback", TransactionStatus.PENDING, null
+                "http://localhost:8080/api/v1/payments/callback", TransactionStatus.PENDING, null
             );
 
             when(paymentClient.createPayment(any(PaymentCreateReq.class), eq(userId)))
