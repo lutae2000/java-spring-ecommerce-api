@@ -29,5 +29,5 @@ public interface OrderRepository {
     /**
      * 결제 완료후 주문상태 변경
      */
-    void updateOrderStatus(String orderNo, OrderStatus orderStatus);
+    int updateOrderStatus(String orderNo, OrderStatus orderStatus);
 }

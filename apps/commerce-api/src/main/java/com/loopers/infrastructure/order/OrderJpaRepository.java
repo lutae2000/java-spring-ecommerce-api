@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface OrderJpaRepository extends JpaRepository<Order, Long> {
     /**
@@ -33,7 +34,7 @@ public interface OrderJpaRepository extends JpaRepository<Order, Long> {
     /**
      *  주문상태 변경
      */
-    @Modifying
-    @Query("update Order o set o.orderStatus = :orderStatus where o.orderNo = :orderNo")
-    void updateOrderStatus(String orderNo, OrderStatus orderStatus);
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update Order o set o.orderStatus = :orderStatus, o.updatedAt = CURRENT_TIMESTAMP where o.orderNo = :orderId")
+    int updateOrderStatus(@Param("orderId") String orderId, @Param("orderStatus") OrderStatus orderStatus);
 }

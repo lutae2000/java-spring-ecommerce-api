@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface PaymentJpaRepository extends JpaRepository<Payment, String> {
 
@@ -14,7 +15,7 @@ public interface PaymentJpaRepository extends JpaRepository<Payment, String> {
     
     List<Payment> findByStatus(TransactionStatus status);
 
-    @Query("update Payment p set p.status = :status, p.reason = :reason where p.orderId = :orderId")
-    @Modifying
-    void updateByOrderIdAndTransactionKey(String transactionId, String orderId, TransactionStatus status, String reason);
+    @Query("update Payment p set p.status = :status, p.reason = :reason where p.orderId = :orderId and p.transactionKey = :transactionKey")
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    int updateByOrderIdAndTransactionKey(@Param("transactionKey") String transactionKey, @Param("orderId") String orderId, @Param("status") TransactionStatus status, @Param("reason") String reason);
 }

@@ -51,7 +51,7 @@ public class PaymentRepositoryImpl implements PaymentRepository {
      * @param reason
      */
     @Override
-    public void updatePayment(String transactionId, String orderId, TransactionStatus status, String reason) {
-        paymentJpaRepository.updateByOrderIdAndTransactionKey(transactionId, orderId, status, reason);
+    public int updatePayment(String transactionKey, String orderId, TransactionStatus status, String reason) {
+        return paymentJpaRepository.updateByOrderIdAndTransactionKey(transactionKey, orderId, status, reason);
     }
 }

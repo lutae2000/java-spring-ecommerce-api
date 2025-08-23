@@ -45,8 +45,8 @@ public class OrderRepositoryImpl implements OrderRepository {
      *  주문상태 변경
      */
     @Override
-    public void updateOrderStatus(String orderNo, OrderStatus orderStatus) {
-        orderJpaRepository.updateOrderStatus(orderNo, orderStatus);
+    public int updateOrderStatus(String orderId, OrderStatus orderStatus) {
+        return orderJpaRepository.updateOrderStatus(orderId, orderStatus);
     }
 
 }

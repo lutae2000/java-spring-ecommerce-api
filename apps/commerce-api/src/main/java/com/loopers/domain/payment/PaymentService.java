@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
@@ -104,6 +105,7 @@ public class PaymentService {
      */
     @Retry(name = "paymentService", fallbackMethod = "getPaymentInfoFallback")
     @CircuitBreaker(name = "paymentService", fallbackMethod = "getPaymentInfoFallback")
+    @Transactional
     public TransactionDetailResponse getPaymentInfo(String userId, String transactionKey){
 
         if (StringUtils.isEmpty(transactionKey)) {
