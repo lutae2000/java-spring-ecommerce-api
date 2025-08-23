@@ -36,6 +36,7 @@ public class Order extends BaseEntity {
     private String userId;
 
     @Enumerated(value = EnumType.STRING)
+    @Column(name = "order_status", length = 32, nullable = false)
     private OrderStatus orderStatus;
 
     private String couponNo;
@@ -68,21 +69,9 @@ public class Order extends BaseEntity {
 
         Order order = new Order(orderNo, userId, OrderStatus.ORDER_PLACED, totalAmount, orderDetailList, couponNo, safeDiscountPrice);
 
-        // 양방향 관계 설정
-        if (orderDetailList != null) {
-            orderDetailList.forEach(order::addOrderDetail); // 반드시 편의 메서드 사용
-
-        }
-
         return order;
     }
 
-    // 연관관계 편의 메서드 - 양방향 세팅 보장
-    public void addOrderDetail(OrderDetail detail) {
-        if (detail == null) return;
-        orderDetailList.add(detail);
-        detail.setOrder(this);
-    }
 
     public void removeOrderDetail(OrderDetail detail) {
         if (detail == null) return;

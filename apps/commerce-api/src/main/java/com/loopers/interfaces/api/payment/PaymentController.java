@@ -69,7 +69,6 @@ public class PaymentController {
      * @param transactionKey 거래번호
      * @return 결제 상세 정보
      */
-    @PostMapping("/callback")
     @GetMapping("/transaction")
     public ApiResponse<TransactionDetailDto.Response> getPaymentInfo(
         @RequestHeader(value = CustomHeader.USER_ID, required = false) String userId,

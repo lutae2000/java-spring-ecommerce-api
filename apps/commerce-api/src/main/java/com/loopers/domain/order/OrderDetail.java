@@ -57,7 +57,18 @@ public class OrderDetail extends BaseEntity {
     }
 
     public void setOrder(Order order) {
+        // 기존 관계 제거
+        if (this.order != null) {
+            this.order.getOrderDetailList().remove(this);
+        }
+        
+        // 새로운 관계 설정
         this.order = order;
+        
+        // 양방향 관계 설정
+        if (order != null && !order.getOrderDetailList().contains(this)) {
+            order.getOrderDetailList().add(this);
+        }
     }
 
 }

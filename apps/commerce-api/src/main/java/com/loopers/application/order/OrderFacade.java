@@ -75,7 +75,7 @@ public class OrderFacade {
                 log.warn("쿠폰 사용 실패: {}, 쿠폰 없이 주문 진행", e.getMessage());
             }
         }
-        // OrderDetail 생성 - 편의 메소드 사용
+
         List<OrderDetail> orderDetails = new ArrayList<>();
         for (OrderCriteria.OrderDetailRequest detail : criteria.orderDetails()) {
             OrderDetail orderDetail = OrderDetail.CreateOrderDetail(
