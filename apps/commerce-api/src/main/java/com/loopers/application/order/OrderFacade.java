@@ -79,6 +79,9 @@ public class OrderFacade {
             // 6. 주문 저장 (DB에 주문 데이터 저장)
             OrderInfo orderInfo = orderService.placeOrder(criteria.userId(), order, discountPrice);
             
+            // 7. 결제 처리 및 재고 차감 (주문 저장 후 별도 처리)
+            processPaymentAndUpdateStock(criteria, orderInfo);
+            
             log.info("주문 생성 완료 - orderNo: {}, userId: {}", orderInfo.getOrder().getOrderNo(), criteria.userId());
             return orderInfo;
             
@@ -107,7 +110,7 @@ public class OrderFacade {
             // 2. 결제 성공 시에만 재고 차감 및 주문 상태 업데이트
             if (paymentSuccess) {
                 updateProductStock(orderInfo.getOrder());
-                orderService.updateOrderStatus(orderInfo.getOrder().getOrderNo(), criteria.userId(), OrderStatus.PAYMENT_COMPLETED);
+                orderService.updateOrderStatus(orderInfo.getOrder().getOrderNo(), criteria.userId(), OrderStatus.ORDER_PAID);
                 log.info("결제 및 재고 차감 완료 - orderNo: {}, userId: {}", 
                     orderInfo.getOrder().getOrderNo(), criteria.userId());
             } else {
@@ -138,11 +141,11 @@ public class OrderFacade {
      * @return 주문 결과 (주문 정보 + 결제 성공 여부)
      */
     public OrderResult placeOrderWithPayment(OrderCriteria.CreateOrder criteria) {
-        // 1. 주문 생성 (DB에 주문 데이터 저장)
+        // 주문 생성 (내부에서 결제 처리 및 재고 차감까지 완료)
         OrderInfo orderInfo = placeOrder(criteria);
         
-        // 2. 결제 처리 및 재고 차감 (별도 처리)
-        boolean paymentSuccess = processPaymentAndUpdateStock(criteria, orderInfo);
+        // 주문 상태를 확인하여 결제 성공 여부 판단
+        boolean paymentSuccess = orderInfo.getOrder().getOrderStatus() == OrderStatus.ORDER_PAID;
         
         return new OrderResult(orderInfo, paymentSuccess);
     }

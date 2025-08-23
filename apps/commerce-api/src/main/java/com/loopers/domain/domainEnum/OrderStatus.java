@@ -2,7 +2,6 @@ package com.loopers.domain.domainEnum;
 
 public enum OrderStatus {
     ORDER_PLACED,        // 주문 접수
-    PAYMENT_COMPLETED,   // 결제 완료
     PAYMENT_FAILED,      // 결제 실패
     ORDER_PAID,          // 주문 결제됨
     ORDER_CONFIRMED,     // 주문 확인
