@@ -53,7 +53,7 @@ public class OrderRepositoryImpl implements OrderRepository {
      * PG결제 요청을 해야할 리스트 조회
      */
     @Override
-    public List<String> selectOrderNoByOrderStatus(OrderStatus orderStatus) {
+    public List<Order> selectOrderNoByOrderStatus(OrderStatus orderStatus) {
         return orderJpaRepository.selectOrderNoByOrderStatus(orderStatus);
     }
 }

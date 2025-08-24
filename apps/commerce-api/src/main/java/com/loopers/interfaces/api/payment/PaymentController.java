@@ -2,15 +2,20 @@ package com.loopers.interfaces.api.payment;
 
 import com.loopers.application.payment.PaymentCriteria;
 import com.loopers.application.payment.PaymentFacade;
+import com.loopers.domain.domainEnum.OrderStatus;
+import com.loopers.domain.order.Order;
 import com.loopers.domain.order.OrderService;
 import com.loopers.domain.payment.OrderResponse;
 import com.loopers.domain.payment.PaymentInfo;
 import com.loopers.domain.payment.TransactionDetailResponse;
+import com.loopers.domain.payment.TransactionStatus;
 import com.loopers.interfaces.api.ApiResponse;
 import com.loopers.interfaces.api.payment.PaymentDto.CreateCallbackRequest;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import com.loopers.support.header.CustomHeader;
+import java.time.Duration;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -125,6 +130,23 @@ public class PaymentController {
         @RequestBody CreateCallbackRequest createCallbackRequest
     ){
         log.info("Callback API called - createCallbackRequest: {}", createCallbackRequest);
-        paymentFacade.callbackProcess(createCallbackRequest);
+        paymentFacade.updatePaymentStatusAndStock(createCallbackRequest);
+    }
+
+    /**
+     * 결제 상태 확인 스케줄러 (30초마다 실행)
+     * ORDER_PLACED 상태의 주문들의 결제 상태를 확인하고 성공 시 callback 처리
+     */
+    @Scheduled(fixedDelay = 1000 * 30)
+    public void paymentSchedule() {
+        log.info("Payment status check scheduler started");
+        
+        try {
+            // Application Layer를 통한 결제 상태 확인 및 callback 처리
+            paymentFacade.processPaymentStatusCheck();
+            log.info("Payment status check scheduler completed successfully");
+        } catch (Exception e) {
+            log.error("Payment status check scheduler failed: {}", e.getMessage(), e);
+        }
     }
 }

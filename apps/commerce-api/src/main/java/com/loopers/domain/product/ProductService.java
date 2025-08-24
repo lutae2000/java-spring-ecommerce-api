@@ -57,7 +57,7 @@ public class ProductService {
         if(ObjectUtils.isEmpty(productInfo)){
             throw new CoreException(ErrorType.NOT_FOUND, "주문하려는 물품코드가 없습니다");
         }
-        if(orderStatus.equals(OrderStatus.ORDER_PLACED) && productInfo.getQuantity() < quantity){
+        if(orderStatus.equals(OrderStatus.ORDER_PLACED) && productInfo.getQuantity() <= quantity){
             throw new CoreException(ErrorType.BAD_REQUEST, "재고가 부족합니다");
         }
         productRepository.updateProduct(productId, quantity, orderStatus);

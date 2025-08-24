@@ -89,4 +89,9 @@ public class OrderService {
     public List<OrderDetail> findOrderDetailByOrderNo(String orderId){
         return orderDetailRepository.findByOrderId(orderId);
     }
+
+    @Transactional(readOnly = true)
+    public List<Order> selectOrderNoByOrderStatus(OrderStatus orderStatus) {
+        return orderRepository.selectOrderNoByOrderStatus(orderStatus);
+    }
 }

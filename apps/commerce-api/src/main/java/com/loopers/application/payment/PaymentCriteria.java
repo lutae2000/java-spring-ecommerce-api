@@ -1,12 +1,14 @@
 package com.loopers.application.payment;
 
 import com.loopers.interfaces.api.payment.CardType;
+import lombok.Builder;
 
 public class PaymentCriteria {
 
     /**
      * 결제 생성 요청 정보
      */
+    @Builder
     public record CreatePayment(
         String userId,
         String orderId,
@@ -26,6 +28,7 @@ public class PaymentCriteria {
     /**
      * 주문 조회 요청 정보
      */
+    @Builder
     public record GetTransactionByOrder(
         String userId,
         String orderId

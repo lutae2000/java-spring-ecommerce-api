@@ -44,9 +44,7 @@ public class OrderFacade {
     private final CardService cardService;
 
     /**
-     * 주문 생성
-     * @param criteria 주문 생성 요청 정보
-     * @return 주문 정보
+     * 주문 생성 (결제 처리 포함)
      */
     @Transactional
     public OrderInfo placeOrder(OrderCriteria.CreateOrder criteria) {
@@ -76,10 +74,10 @@ public class OrderFacade {
             // 5. 포인트 처리
             processPoint(userInfo, criteria, order.getTotalAmount().subtract(discountPrice));
             
-            // 6. 주문 저장 (DB에 주문 데이터 저장)
-            OrderInfo orderInfo = orderService.placeOrder(criteria.userId(), order, discountPrice);
+            // 6. 주문 저장 (별도 트랜잭션)
+            OrderInfo orderInfo = saveOrderInTransaction(criteria.userId(), order, discountPrice);
             
-            // 7. 결제 처리 및 재고 차감 (주문 저장 후 별도 처리)
+            // 7. 결제 처리 (별도 처리 - 실패해도 주문 데이터는 보존)
             processPaymentAndUpdateStock(criteria, orderInfo);
             
             log.info("주문 생성 완료 - orderNo: {}, userId: {}", orderInfo.getOrder().getOrderNo(), criteria.userId());
@@ -114,7 +112,7 @@ public class OrderFacade {
                 log.info("결제 및 재고 차감 완료 - orderNo: {}, userId: {}", 
                     orderInfo.getOrder().getOrderNo(), criteria.userId());
             } else {
-                orderService.updateOrderStatus(orderInfo.getOrder().getOrderNo(), criteria.userId(), OrderStatus.PAYMENT_FAILED);
+                orderService.updateOrderStatus(orderInfo.getOrder().getOrderNo(), criteria.userId(), OrderStatus.ORDER_PLACED);
                 log.warn("결제 실패로 재고 차감 생략 - orderNo: {}, userId: {}", 
                     orderInfo.getOrder().getOrderNo(), criteria.userId());
             }
@@ -309,6 +307,14 @@ public class OrderFacade {
         for (OrderDetail item : order.getOrderDetailList()) {
             productService.updateStock(item.getProductId(), item.getQuantity(), OrderStatus.ORDER_PLACED);
         }
+    }
+
+    /**
+     * 주문 저장 (별도 트랜잭션)
+     */
+    @Transactional
+    private OrderInfo saveOrderInTransaction(String userId, Order order, BigDecimal discountPrice) {
+        return orderService.placeOrder(userId, order, discountPrice);
     }
 
     /**

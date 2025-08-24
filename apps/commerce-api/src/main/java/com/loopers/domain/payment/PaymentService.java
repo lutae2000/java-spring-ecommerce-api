@@ -27,8 +27,6 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
 
-    private final CircuitBreakerUtils circuitBreakerUtils;
-
     /**
      * 주문 생성
      * @param userId
@@ -38,8 +36,8 @@ public class PaymentService {
      * @param cardNo
      * @return
      */
-    @Retry(name = "paymentService", fallbackMethod = "createPaymentFallback")
     @CircuitBreaker(name = "paymentService", fallbackMethod = "createPaymentFallback")
+    @Retry(name = "paymentService", fallbackMethod = "createPaymentFallback")
     public PaymentInfo createPayment(String userId, String orderId, Long amount, CardType cardType, String cardNo) {
 
         log.info("=== Payment Service Called ===");
@@ -80,7 +78,7 @@ public class PaymentService {
                 null
             );
 
-            Payment savedPayment = paymentRepository.save(payment);
+            Payment  savedPayment = paymentRepository.upsertPayment(payment);
             return PaymentInfo.from(savedPayment);
         } catch (CoreException e) {
             log.error("Payment business error: {}", e.getMessage());
@@ -90,6 +88,8 @@ public class PaymentService {
             throw e;
         }
     }
+
+    private final CircuitBreakerUtils circuitBreakerUtils;
 
     /**
      * 결제 생성 실패 시 fallback 메소드
@@ -110,7 +110,7 @@ public class PaymentService {
             null
         );
 
-        paymentRepository.save(payment);
+        paymentRepository.upsertPayment(payment);
 
         // null을 반환하여 호출자가 실패를 인지할 수 있도록 함
         return null;

@@ -3,6 +3,8 @@ package com.loopers.infrastructure.payment;
 import com.loopers.domain.payment.Payment;
 import com.loopers.domain.payment.PaymentRepository;
 import com.loopers.domain.payment.TransactionStatus;
+import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import java.util.List;
@@ -19,8 +21,20 @@ public class PaymentRepositoryImpl implements PaymentRepository {
      * @return
      */
     @Override
-    public Payment save(Payment payment){
-        return paymentJpaRepository.save(payment);
+    public Payment upsertPayment(Payment payment){
+
+        Boolean existsOrderId = paymentJpaRepository.existsByOrderId(payment.getOrderId());
+
+        if(existsOrderId){
+            int updated = paymentJpaRepository.updatePayment(payment);
+
+            if(updated == 0){
+                throw new CoreException(ErrorType.BAD_REQUEST, "결제내역 업데이트 실패");
+            }
+            return paymentJpaRepository.findByTransactionKey(payment.getTransactionKey());
+        } else {
+            return paymentJpaRepository.save(payment);
+        }
     }
 
     /**
@@ -52,6 +66,6 @@ public class PaymentRepositoryImpl implements PaymentRepository {
      */
     @Override
     public int updatePayment(String transactionKey, String orderId, TransactionStatus status, String reason) {
-        return paymentJpaRepository.updateByOrderIdAndTransactionKey(transactionKey, orderId, status, reason);
+        return paymentJpaRepository.updateByOrderId(transactionKey, orderId, status, reason);
     }
 }

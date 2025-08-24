@@ -5,6 +5,7 @@ import com.loopers.domain.payment.TransactionStatus;
 import com.loopers.interfaces.api.payment.CardType;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+import lombok.Builder;
 
 public class PaymentDto {
 
@@ -28,6 +29,7 @@ public class PaymentDto {
      * @param status
      * @param reason
      */
+    @Builder
     public record CreateCallbackRequest(
         String transactionKey,
         String orderId,

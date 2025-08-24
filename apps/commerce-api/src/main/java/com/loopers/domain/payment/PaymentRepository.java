@@ -9,7 +9,7 @@ public interface PaymentRepository {
      * @param payment
      * @return
      */
-    Payment save(Payment payment);
+    Payment upsertPayment(Payment payment);
 
     /**
      * 결제정보 찾기

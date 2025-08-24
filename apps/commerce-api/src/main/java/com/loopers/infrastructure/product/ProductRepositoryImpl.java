@@ -116,7 +116,7 @@ public class ProductRepositoryImpl implements ProductRepository {
         Product product = productJPARepository.findProductByCodeForUpdate(productId);
 
         //주문시
-        if(orderStatus.equals(OrderStatus.ORDER_PLACED) && product.getQuantity() > quantity){
+        if((orderStatus.equals(OrderStatus.ORDER_PLACED) || orderStatus.equals(OrderStatus.ORDER_PAID)) && product.getQuantity() > quantity){
             product.setQuantity(product.getQuantity() - quantity);
         } else if(orderStatus.equals(OrderStatus.ORDER_CANCEL)){
             product.setQuantity(product.getQuantity() + quantity);
