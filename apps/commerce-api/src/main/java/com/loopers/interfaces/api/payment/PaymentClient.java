@@ -15,8 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient(
     name = "payment-gateway",
-    url = "http://localhost:8082",
-    configuration = PaymentClientConfig.class
+    url = "http://localhost:8082"
 )
 public interface PaymentClient {
 

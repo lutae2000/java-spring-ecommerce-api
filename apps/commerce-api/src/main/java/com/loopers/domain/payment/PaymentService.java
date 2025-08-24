@@ -26,9 +26,10 @@ public class PaymentService {
     private final PaymentClient paymentClient;
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
+    private final CircuitBreakerUtils circuitBreakerUtils;
 
     /**
-     * 주문 생성
+     * 결제 생성 (메인 메서드)
      * @param userId
      * @param orderId
      * @param amount
@@ -36,10 +37,7 @@ public class PaymentService {
      * @param cardNo
      * @return
      */
-    @CircuitBreaker(name = "paymentService", fallbackMethod = "createPaymentFallback")
-    @Retry(name = "paymentService", fallbackMethod = "createPaymentFallback")
     public PaymentInfo createPayment(String userId, String orderId, Long amount, CardType cardType, String cardNo) {
-
         log.info("=== Payment Service Called ===");
         log.info("userId: {}, orderId: {}, amount: {}", userId, orderId, amount);
 
@@ -51,34 +49,13 @@ public class PaymentService {
             throw new RuntimeException("Test failure for circuit breaker");
         }
 
-        try{
-            String callbackUrl = "http://localhost:8080/api/v1/payments/callback";
-
-            PaymentCreateReq req = PaymentCreateReq.builder()
-                .orderId(orderId)
-                .amount(amount)
-                .cardType(cardType)
-                .cardNo(StringUtil.cardNoWithHyphen(cardNo))
-                .callbackUrl(callbackUrl)
-                .build();
-
-            ApiResponse<PaymentResponse> response = paymentClient.createPayment(req, userId);
-
-            log.info("Payment created successfully: {}", response.data().getTransactionKey());
-
-            Payment payment = new Payment(
-                response.data().getTransactionKey(),
-                userId,
-                orderId,
-                cardType,
-                cardNo,
-                amount,
-                callbackUrl,
-                response.data().getStatus(),
-                null
-            );
-
-            Payment  savedPayment = paymentRepository.upsertPayment(payment);
+        try {
+            // 1. 외부 API 호출 (CircuitBreaker와 Retry 적용)
+            PaymentResponse paymentResponse = callPaymentGateway(userId, orderId, amount, cardType, cardNo);
+            
+            // 2. DB 저장 (CircuitBreaker와 Retry 미적용)
+            Payment savedPayment = savePaymentToDatabase(userId, orderId, amount, cardType, cardNo, paymentResponse);
+            
             return PaymentInfo.from(savedPayment);
         } catch (CoreException e) {
             log.error("Payment business error: {}", e.getMessage());
@@ -89,10 +66,76 @@ public class PaymentService {
         }
     }
 
-    private final CircuitBreakerUtils circuitBreakerUtils;
+    /**
+     * 외부 결제 게이트웨이 호출 (CircuitBreaker와 Retry 적용)
+     */
+    @CircuitBreaker(name = "paymentService", fallbackMethod = "callPaymentGatewayFallback")
+    @Retry(name = "paymentService", fallbackMethod = "callPaymentGatewayFallback")
+    private PaymentResponse callPaymentGateway(String userId, String orderId, Long amount, CardType cardType, String cardNo) {
+        String callbackUrl = "http://localhost:8080/api/v1/payments/callback";
+
+        PaymentCreateReq req = PaymentCreateReq.builder()
+            .orderId(orderId)
+            .amount(amount)
+            .cardType(cardType)
+            .cardNo(StringUtil.cardNoWithHyphen(cardNo))
+            .callbackUrl(callbackUrl)
+            .build();
+
+        ApiResponse<PaymentResponse> response = paymentClient.createPayment(req, userId);
+        log.info("Payment created successfully: {}", response.data().getTransactionKey());
+        
+        return response.data();
+    }
 
     /**
-     * 결제 생성 실패 시 fallback 메소드
+     * 외부 결제 게이트웨이 호출 실패 시 fallback 메소드
+     */
+    private PaymentResponse callPaymentGatewayFallback(String userId, String orderId, Long amount, CardType cardType, String cardNo, Exception e) {
+        log.warn("Payment gateway call failed, using fallback - userId: {}, orderId: {}, error: {}", userId, orderId, e.getMessage());
+        
+        // 실패한 결제 정보를 DB에 저장
+        Payment payment = new Payment(
+            null,
+            userId,
+            orderId,
+            cardType,
+            cardNo,
+            amount,
+            null,
+            TransactionStatus.FAIL,
+            e.getMessage()
+        );
+
+        paymentRepository.upsertPayment(payment);
+        
+        // 실패 상태의 PaymentResponse 반환
+        return new PaymentResponse(null, TransactionStatus.FAIL);
+    }
+
+    /**
+     * DB에 결제 정보 저장 (CircuitBreaker와 Retry 미적용)
+     */
+    private Payment savePaymentToDatabase(String userId, String orderId, Long amount, CardType cardType, String cardNo, PaymentResponse paymentResponse) {
+        String callbackUrl = "http://localhost:8080/api/v1/payments/callback";
+        
+        Payment payment = new Payment(
+            paymentResponse.getTransactionKey(),
+            userId,
+            orderId,
+            cardType,
+            cardNo,
+            amount,
+            callbackUrl,
+            paymentResponse.getStatus(),
+            null
+        );
+
+        return paymentRepository.upsertPayment(payment);
+    }
+
+    /**
+     * 결제 생성 실패 시 fallback 메소드 (기존 메서드 유지 - 호환성)
      */
     public PaymentInfo createPaymentFallback(String userId, String orderId, Long amount, CardType cardType, String cardNo, Exception e) {
         log.warn("Payment creation failed, using fallback - userId: {}, orderId: {}, error: {}", userId, orderId, e.getMessage());
@@ -119,8 +162,8 @@ public class PaymentService {
     /**
      * 거래번호로 결제 내역 조회
      */
-    @Retry(name = "paymentService", fallbackMethod = "getPaymentInfoFallback")
     @CircuitBreaker(name = "paymentService", fallbackMethod = "getPaymentInfoFallback")
+    @Retry(name = "paymentService", fallbackMethod = "getPaymentInfoFallback")
     public TransactionDetailResponse getPaymentInfo(String userId, String transactionKey){
 
         if (StringUtils.isEmpty(transactionKey)) {
@@ -184,8 +227,8 @@ public class PaymentService {
      * @param orderId
      * @return
      */
-    @Retry(name = "paymentService", fallbackMethod = "getTransactionByOrderFallback")
     @CircuitBreaker(name = "paymentService", fallbackMethod = "getTransactionByOrderFallback")
+    @Retry(name = "paymentService", fallbackMethod = "getTransactionByOrderFallback")
     public OrderResponse getTransactionByOrder(String userId, String orderId){
         if (StringUtils.isEmpty(orderId)) {
             throw new CoreException(ErrorType.BAD_REQUEST, "orderId parameter can't be null");

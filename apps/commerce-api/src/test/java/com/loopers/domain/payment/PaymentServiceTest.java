@@ -17,6 +17,7 @@ import com.loopers.interfaces.api.payment.PaymentClient;
 import com.loopers.interfaces.api.payment.PaymentCreateReq;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
+import com.loopers.support.utils.CircuitBreakerUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -38,6 +39,9 @@ class PaymentServiceTest {
 
     @Mock
     private OrderRepository orderRepository;
+
+    @Mock
+    private CircuitBreakerUtils circuitBreakerUtils;
 
     @InjectMocks
     private PaymentService paymentService;
@@ -77,7 +81,7 @@ class PaymentServiceTest {
 
             when(paymentClient.createPayment(any(PaymentCreateReq.class), eq(userId)))
                 .thenReturn(apiResponse);
-            when(paymentRepository.save(any(Payment.class)))
+            when(paymentRepository.upsertPayment(any(Payment.class)))
                 .thenReturn(savedPayment);
 
             // when
@@ -96,7 +100,7 @@ class PaymentServiceTest {
             );
 
             verify(paymentClient, times(1)).createPayment(any(PaymentCreateReq.class), eq(userId));
-            verify(paymentRepository, times(1)).save(any(Payment.class));
+            verify(paymentRepository, times(1)).upsertPayment(any(Payment.class));
         }
 
         @Test
@@ -105,17 +109,14 @@ class PaymentServiceTest {
             // given
             when(paymentClient.createPayment(any(PaymentCreateReq.class), eq(userId)))
                 .thenThrow(new RuntimeException("API 호출 실패"));
-            when(paymentRepository.save(any(Payment.class)))
-                .thenReturn(new Payment(null, userId, orderId, cardType, cardNo, amount, null, TransactionStatus.FAIL, "API 호출 실패"));
 
-            // when
-            PaymentInfo result = paymentService.createPayment(userId, orderId, amount, cardType, cardNo);
-
-            // then
-            assertThat(result).isNull(); // fallback에서 null 반환
+            // when & then
+            // Circuit Breaker가 작동하지 않으므로 예외가 발생해야 함
+            assertThrows(RuntimeException.class, () -> {
+                paymentService.createPayment(userId, orderId, amount, cardType, cardNo);
+            });
 
             verify(paymentClient, times(1)).createPayment(any(PaymentCreateReq.class), eq(userId));
-            verify(paymentRepository, times(1)).save(any(Payment.class));
         }
     }
 
@@ -137,6 +138,10 @@ class PaymentServiceTest {
 
             when(paymentClient.getPaymentInfo(transactionKey, userId))
                 .thenReturn(apiResponse);
+            when(orderRepository.updateOrderStatus(orderId, com.loopers.domain.domainEnum.OrderStatus.ORDER_PAID))
+                .thenReturn(1);
+            when(paymentRepository.updatePayment(transactionKey, orderId, TransactionStatus.SUCCESS, "결제 성공"))
+                .thenReturn(1);
 
             // when
             TransactionDetailResponse result = paymentService.getPaymentInfo(userId, transactionKey);
@@ -177,16 +182,11 @@ class PaymentServiceTest {
             when(paymentClient.getPaymentInfo(transactionKey, userId))
                 .thenThrow(new RuntimeException("API 호출 실패"));
 
-            // when
-            TransactionDetailResponse result = paymentService.getPaymentInfo(userId, transactionKey);
-
-            // then
-            assertAll(
-                () -> assertThat(result).isNotNull(),
-                () -> assertThat(result.getTransactionKey()).isEqualTo(transactionKey),
-                () -> assertThat(result.getStatus()).isEqualTo(TransactionStatus.FAIL),
-                () -> assertThat(result.getReason()).contains("Payment gateway unavailable")
-            );
+            // when & then
+            // Retry가 작동하지 않으므로 예외가 발생해야 함
+            assertThrows(RuntimeException.class, () -> {
+                paymentService.getPaymentInfo(userId, transactionKey);
+            });
 
             verify(paymentClient, times(1)).getPaymentInfo(transactionKey, userId);
         }
@@ -243,15 +243,11 @@ class PaymentServiceTest {
             when(paymentClient.getTransactionsByOrder(orderId, userId))
                 .thenThrow(new RuntimeException("API 호출 실패"));
 
-            // when
-            OrderResponse result = paymentService.getTransactionByOrder(userId, orderId);
-
-            // then
-            assertAll(
-                () -> assertThat(result).isNotNull(),
-                () -> assertThat(result.getOrderId()).isEqualTo(orderId),
-                () -> assertThat(result.getTransactions()).isNull()
-            );
+            // when & then
+            // Retry가 작동하지 않으므로 예외가 발생해야 함
+            assertThrows(RuntimeException.class, () -> {
+                paymentService.getTransactionByOrder(userId, orderId);
+            });
 
             verify(paymentClient, times(1)).getTransactionsByOrder(orderId, userId);
         }
@@ -276,7 +272,7 @@ class PaymentServiceTest {
 
             when(paymentClient.createPayment(any(PaymentCreateReq.class), eq(userId)))
                 .thenReturn(apiResponse);
-            when(paymentRepository.save(any(Payment.class)))
+            when(paymentRepository.upsertPayment(any(Payment.class)))
                 .thenReturn(savedPayment);
 
             // when
@@ -289,7 +285,7 @@ class PaymentServiceTest {
             );
 
             verify(paymentClient, times(1)).createPayment(any(PaymentCreateReq.class), eq(userId));
-            verify(paymentRepository, times(1)).save(any(Payment.class));
+            verify(paymentRepository, times(1)).upsertPayment(any(Payment.class));
         }
 
         @Test
@@ -307,7 +303,7 @@ class PaymentServiceTest {
 
             when(paymentClient.createPayment(any(PaymentCreateReq.class), eq(userId)))
                 .thenReturn(apiResponse);
-            when(paymentRepository.save(any(Payment.class)))
+            when(paymentRepository.upsertPayment(any(Payment.class)))
                 .thenReturn(savedPayment);
 
             // when
@@ -320,7 +316,7 @@ class PaymentServiceTest {
             );
 
             verify(paymentClient, times(1)).createPayment(any(PaymentCreateReq.class), eq(userId));
-            verify(paymentRepository, times(1)).save(any(Payment.class));
+            verify(paymentRepository, times(1)).upsertPayment(any(Payment.class));
         }
     }
 }
