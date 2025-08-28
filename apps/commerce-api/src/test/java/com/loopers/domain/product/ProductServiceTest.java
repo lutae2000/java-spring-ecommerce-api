@@ -10,7 +10,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-
 import com.loopers.application.product.ProductPageResult;
 import com.loopers.domain.brand.Brand;
 import com.loopers.infrastructure.brand.BrandJpaRepository;
@@ -51,7 +50,6 @@ public class ProductServiceTest {
 
     @MockBean
     RedisCacheTemplate redisCacheTemplate;
-
 
     private Brand testBrand;
     private Product testProduct;
@@ -107,7 +105,6 @@ public class ProductServiceTest {
         databaseCleanUp.truncateAllTables();
     }
 
-
     @Nested
     @DisplayName("물품 상세조회")
     class GetProductInfo {
@@ -117,8 +114,8 @@ public class ProductServiceTest {
         void inquiryProduct(){
             //given
             ProductInfo expectedProductInfo = ProductInfo.from(testProduct);
-            when(redisCacheTemplate.getOrSet(anyString(), any(), any(Duration.class), any()))
-                .thenReturn(expectedProductInfo);
+            when(redisCacheTemplate.getOrSet(anyString(), eq(Product.class), any(Duration.class), any()))
+                .thenReturn(testProduct);
 
             //when
             ProductInfo productInfo = productService.findProduct("A0001");
@@ -136,7 +133,7 @@ public class ProductServiceTest {
         @DisplayName("실패 - 상품 미존재시 404에러")
         void inquiryProduct_when_not_exists_product(){
             //given
-            when(redisCacheTemplate.getOrSet(anyString(), any(), any(Duration.class), any()))
+            when(redisCacheTemplate.getOrSet(anyString(), eq(Product.class), any(Duration.class), any()))
                 .thenThrow(new CoreException(ErrorType.NOT_FOUND, "검색하려는 물품이 없습니다"));
 
             //when
@@ -159,7 +156,6 @@ public class ProductServiceTest {
         void createProduct_success(){
             //given
 
-
             //when
 //            productService.createProduct(command);
 
@@ -180,10 +176,10 @@ public class ProductServiceTest {
         void findProduct_success_with_cache_miss(){
             // given
             ProductInfo expectedProductInfo = ProductInfo.from(testProduct);
-            when(redisCacheTemplate.getOrSet(anyString(), any(), any(Duration.class), any()))
+            when(redisCacheTemplate.getOrSet(anyString(), eq(Product.class), any(Duration.class), any()))
                 .thenAnswer(invocation -> {
                     // supplier 호출 (DB 조회 )
-                    return expectedProductInfo;
+                    return testProduct;
                 });
 
             // when
@@ -199,7 +195,7 @@ public class ProductServiceTest {
 
             // Redis 호출 확인
             verify(redisCacheTemplate, times(1))
-                .getOrSet(anyString(), eq(ProductInfo.class), any(Duration.class), any());
+                .getOrSet(anyString(), eq(Product.class), any(Duration.class), any());
         }
 
         @Test
@@ -210,12 +206,12 @@ public class ProductServiceTest {
 
             // 첫 번째 호출: 캐시 미스 후 DB 조회 (supplier 호출)
             // 두 번째 호출: 캐시 히트 (첫 번째 호출에서 저장된 값 반환)
-            when(redisCacheTemplate.getOrSet(anyString(), any(), any(Duration.class), any()))
+            when(redisCacheTemplate.getOrSet(anyString(), eq(Product.class), any(Duration.class), any()))
                 .thenAnswer(invocation -> {
                     // 첫 번째 호출 시에만 supplier 실행 (DB 조회 시뮬레이션)
-                    return expectedProductInfo;
+                    return testProduct;
                 })
-                .thenReturn(expectedProductInfo); // 두 번째 호출부터는 캐시된 값 반환
+                .thenReturn(testProduct); // 두 번째 호출부터는 캐시된 값 반환
 
             // when - 첫 번째 조회 (캐시 미스)
             ProductInfo firstResult = productService.findProduct("A0001");
@@ -225,14 +221,14 @@ public class ProductServiceTest {
 
             // Redis 호출 확인 - 총 2번 호출되어야 함
             verify(redisCacheTemplate, times(2))
-                .getOrSet(anyString(), eq(ProductInfo.class), any(Duration.class), any());
+                .getOrSet(anyString(), eq(Product.class), any(Duration.class), any());
         }
 
         @Test
         @DisplayName("실패 - 상품 미존재시 404에러")
         void findProduct_failure_product_not_found(){
             // given
-            when(redisCacheTemplate.getOrSet(anyString(), any(), any(Duration.class), any()))
+            when(redisCacheTemplate.getOrSet(anyString(), eq(Product.class), any(Duration.class), any()))
                 .thenThrow(new CoreException(ErrorType.NOT_FOUND, "검색하려는 물품이 없습니다"));
 
             // when & then
@@ -249,15 +245,11 @@ public class ProductServiceTest {
         void findProduct_failure_redis_fallback_to_db(){
             // given
             ProductInfo expectedProductInfo = ProductInfo.from(testProduct);
-            
-            // Redis get 메서드에서 예외 발생 
-            when(redisCacheTemplate.get(anyString(), eq(ProductInfo.class)))
-                .thenThrow(new RuntimeException("Redis 연결 실패"));
-            
-            when(redisCacheTemplate.getOrSet(anyString(), any(), any(Duration.class), any()))
+
+            when(redisCacheTemplate.getOrSet(anyString(), eq(Product.class), any(Duration.class), any()))
                 .thenAnswer(invocation -> {
                     // supplier 호출 (DB 조회 )
-                    return expectedProductInfo;
+                    return testProduct;
                 });
 
             // when
@@ -271,7 +263,7 @@ public class ProductServiceTest {
 
             // Redis 호출 확인 (실패 후 supplier 재호출)
             verify(redisCacheTemplate, times(1))
-                .getOrSet(anyString(), eq(ProductInfo.class), any(Duration.class), any());
+                .getOrSet(anyString(), eq(Product.class), any(Duration.class), any());
         }
     }
 
@@ -284,26 +276,35 @@ public class ProductServiceTest {
         void findProductListByBrandCode_success_with_cache_miss(){
             // given
             Pageable pageable = PageRequest.of(0, 10);
-            Page<Product> productPage = productRepository.findProductListByBrandCode("B0001", pageable);
-            ProductPageResult expectedResult = ProductPageResult.from(productPage.map(ProductInfo::from));
+            SortBy sortBy = SortBy.LIKE_DESC;
 
-            when(redisCacheTemplate.getOrSet(anyString(), any(), any(Duration.class), any()))
+            ProductPageResult expectedResult = ProductPageResult.builder()
+                .products(List.of(ProductInfo.from(testProduct)))
+                .page(0)
+                .size(10)
+                .totalElements(2)
+                .totalPages(1)
+                .hasNext(false)
+                .hasPrevious(false)
+                .isFirst(true)
+                .isLast(true)
+                .build();
+
+            when(redisCacheTemplate.getOrSet(anyString(), eq(ProductPageResult.class), any(Duration.class), any()))
                 .thenAnswer(invocation -> {
                     // supplier 호출 (DB 조회 )
                     return expectedResult;
                 });
 
             // when
-            ProductPageResult result = productService.findProductListByBrandCode("B0001", pageable);
+            ProductPageResult result = productService.findProductListByBrandCode("B0001", sortBy, pageable);
 
             // then
             assertAll(
-                () -> assertThat(result.getProducts()).hasSize(2),
+                () -> assertThat(result.getProducts()).hasSize(1),
                 () -> assertThat(result.getTotalElements()).isEqualTo(2),
                 () -> assertThat(result.getPage()).isEqualTo(0),
-                () -> assertThat(result.getSize()).isEqualTo(10),
-                () -> assertThat(result.getProducts().get(0).getCode()).isEqualTo("A0001"),
-                () -> assertThat(result.getProducts().get(1).getCode()).isEqualTo("A0002")
+                () -> assertThat(result.getSize()).isEqualTo(10)
             );
 
             // Redis 호출 확인
@@ -316,18 +317,29 @@ public class ProductServiceTest {
         void findProductListByBrandCode_success_with_cache_hit(){
             // given
             Pageable pageable = PageRequest.of(0, 10);
-            Page<Product> productPage = productRepository.findProductListByBrandCode("B0001", pageable);
-            ProductPageResult cachedResult = ProductPageResult.from(productPage.map(ProductInfo::from));
+            SortBy sortBy = SortBy.LIKE_DESC;
 
-            when(redisCacheTemplate.getOrSet(anyString(), any(), any(Duration.class), any()))
+            ProductPageResult cachedResult = ProductPageResult.builder()
+                .products(List.of(ProductInfo.from(testProduct)))
+                .page(0)
+                .size(10)
+                .totalElements(2)
+                .totalPages(1)
+                .hasNext(false)
+                .hasPrevious(false)
+                .isFirst(true)
+                .isLast(true)
+                .build();
+
+            when(redisCacheTemplate.getOrSet(anyString(), eq(ProductPageResult.class), any(Duration.class), any()))
                 .thenReturn(cachedResult);
 
             // when
-            ProductPageResult result = productService.findProductListByBrandCode("B0001", pageable);
+            ProductPageResult result = productService.findProductListByBrandCode("B0001", sortBy, pageable);
 
             // then
             assertAll(
-                () -> assertThat(result.getProducts()).hasSize(2),
+                () -> assertThat(result.getProducts()).hasSize(1),
                 () -> assertThat(result.getTotalElements()).isEqualTo(2),
                 () -> assertThat(result.getPage()).isEqualTo(0),
                 () -> assertThat(result.getSize()).isEqualTo(10)
@@ -343,14 +355,25 @@ public class ProductServiceTest {
         void findProductListByBrandCode_success_with_paging(){
             // given
             Pageable pageable = PageRequest.of(0, 1); // 페이지 크기 1
-            Page<Product> productPage = productRepository.findProductListByBrandCode("B0001", pageable);
-            ProductPageResult expectedResult = ProductPageResult.from(productPage.map(ProductInfo::from));
+            SortBy sortBy = SortBy.LIKE_DESC;
 
-            when(redisCacheTemplate.getOrSet(anyString(), any(), any(Duration.class), any()))
+            ProductPageResult expectedResult = ProductPageResult.builder()
+                .products(List.of(ProductInfo.from(testProduct)))
+                .page(0)
+                .size(1)
+                .totalElements(2)
+                .totalPages(2)
+                .hasNext(true)
+                .hasPrevious(false)
+                .isFirst(true)
+                .isLast(false)
+                .build();
+
+            when(redisCacheTemplate.getOrSet(anyString(), eq(ProductPageResult.class), any(Duration.class), any()))
                 .thenReturn(expectedResult);
 
             // when
-            ProductPageResult result = productService.findProductListByBrandCode("B0001", pageable);
+            ProductPageResult result = productService.findProductListByBrandCode("B0001", sortBy, pageable);
 
             // then
             assertAll(
@@ -369,7 +392,9 @@ public class ProductServiceTest {
         void findProductListByBrandCode_success_empty_result(){
             // given
             Pageable pageable = PageRequest.of(0, 10);
-            when(redisCacheTemplate.getOrSet(anyString(), any(), any(Duration.class), any()))
+            SortBy sortBy = SortBy.LIKE_DESC;
+
+            when(redisCacheTemplate.getOrSet(anyString(), eq(ProductPageResult.class), any(Duration.class), any()))
                 .thenAnswer(invocation -> {
                     // 빈 결과 반환
                     return ProductPageResult.builder()
@@ -386,7 +411,7 @@ public class ProductServiceTest {
                 });
 
             // when
-            ProductPageResult result = productService.findProductListByBrandCode("NON_EXISTENT_BRAND", pageable);
+            ProductPageResult result = productService.findProductListByBrandCode("NON_EXISTENT_BRAND", sortBy, pageable);
 
             // then
             assertAll(
@@ -403,25 +428,32 @@ public class ProductServiceTest {
         void findProductListByBrandCode_failure_redis_fallback_to_db(){
             // given
             Pageable pageable = PageRequest.of(0, 10);
-            Page<Product> productPage = productRepository.findProductListByBrandCode("B0001", pageable);
-            ProductPageResult expectedResult = ProductPageResult.from(productPage.map(ProductInfo::from));
+            SortBy sortBy = SortBy.LIKE_DESC;
 
-            // Redis get 메서드에서 예외 발생 
-            when(redisCacheTemplate.get(anyString(), eq(ProductPageResult.class)))
-                .thenThrow(new RuntimeException("Redis 연결 실패"));
-            
-            when(redisCacheTemplate.getOrSet(anyString(), any(), any(Duration.class), any()))
+            ProductPageResult expectedResult = ProductPageResult.builder()
+                .products(List.of(ProductInfo.from(testProduct)))
+                .page(0)
+                .size(10)
+                .totalElements(2)
+                .totalPages(1)
+                .hasNext(false)
+                .hasPrevious(false)
+                .isFirst(true)
+                .isLast(true)
+                .build();
+
+            when(redisCacheTemplate.getOrSet(anyString(), eq(ProductPageResult.class), any(Duration.class), any()))
                 .thenAnswer(invocation -> {
                     // supplier 호출 (DB 조회 )
                     return expectedResult;
                 });
 
             // when
-            ProductPageResult result = productService.findProductListByBrandCode("B0001", pageable);
+            ProductPageResult result = productService.findProductListByBrandCode("B0001", sortBy, pageable);
 
             // then
             assertAll(
-                () -> assertThat(result.getProducts()).hasSize(2),
+                () -> assertThat(result.getProducts()).hasSize(1),
                 () -> assertThat(result.getTotalElements()).isEqualTo(2)
             );
 

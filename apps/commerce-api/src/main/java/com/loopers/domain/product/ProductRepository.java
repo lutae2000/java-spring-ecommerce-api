@@ -2,6 +2,7 @@ package com.loopers.domain.product;
 
 
 import com.loopers.application.product.ProductPageResult;
+import com.loopers.domain.domainEnum.OrderStatus;
 import java.time.Duration;
 import java.util.List;
 import java.util.function.Supplier;
@@ -44,11 +45,11 @@ public interface ProductRepository {
     Product save(Product product);
 
     /**
-     * 주문한 수량만큼 재고 차감
+     * 주문/취소한 수량만큼 재고 업데이트
      * @param productId
      * @param quantity
      */
-    void orderProduct(String productId, Long quantity);
+    void updateProduct(String productId, Long quantity, OrderStatus orderStatus);
 
     /**
      * 상품 리스트 저장

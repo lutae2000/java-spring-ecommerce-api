@@ -20,7 +20,7 @@ spring:
           show_sql: true
           highlight_sql: true
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: true
   main:
     web-application-type: servlet
@@ -34,9 +34,20 @@ spring:
       - redis.yml
       - logging.yml
       - monitoring.yml
+      - resilience4j.yml  # 명시적으로 import
+
+# Resilience4j 활성화
+resilience4j:
+  enabled: true
+  circuitbreaker:
+    enabled: true
+  retry:
+    enabled: true
+
 logging:
   level:
     org.hibernate.orm.jdbc.bind: info
+    io.github.resilience4j: DEBUG  # Resilience4j 디버그 로그 추가
 
 springdoc:
   use-fqn: true

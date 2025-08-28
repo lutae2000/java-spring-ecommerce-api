@@ -4,13 +4,16 @@ import com.loopers.application.coupon.CouponCriteria;
 import com.loopers.domain.brand.Brand;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.ProductCommand;
+import lombok.Builder;
 
+@Builder
 public record CouponCommand (
     String userId,
-    String couponNo
+    String couponNo,
+    Boolean useYn
 ){
-    public static CouponCriteria of(String userId, String couponNo) {
-        return new CouponCriteria(userId, couponNo);
+    public static CouponCriteria of(String userId, String couponNo, Boolean useYn) {
+        return new CouponCriteria(userId, couponNo, useYn);
     }
 
     public static Product toProduct(ProductCommand productCommand){

@@ -57,4 +57,12 @@ public interface ProductJPARepository extends JpaRepository<Product, Long> {
         "CASE WHEN :sortBy = 'LATEST' THEN p.createdAt END DESC, " +
         "p.code ASC")
     Page<Object[]> findProductListByBrandCode(String brandCode, @Param("sortBy") String sortBy, Pageable pageable);
+
+    /**
+     * 재고 조정
+     * @param productId
+     * @param quantity
+     */
+    @Query("update Product p set p.quantity = :quantity where p.code = :productId")
+    void updateProductQuantity(String productId, Long quantity);
 }

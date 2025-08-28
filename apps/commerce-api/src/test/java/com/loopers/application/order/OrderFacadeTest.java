@@ -3,16 +3,14 @@ package com.loopers.application.order;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
-import com.loopers.application.like.LikeFacade;
+import com.loopers.domain.card.Card;
+import com.loopers.domain.card.CardService;
 import com.loopers.domain.coupon.Coupon;
 import com.loopers.domain.coupon.CouponService;
 import com.loopers.domain.domainEnum.DiscountType;
 import com.loopers.domain.domainEnum.Gender;
-import com.loopers.domain.order.Order;
-import com.loopers.domain.order.OrderDetail;
-import com.loopers.domain.order.OrderDetailCommand;
-import com.loopers.domain.order.OrderDetailCommand.orderItem;
 import com.loopers.domain.order.OrderInfo;
+import com.loopers.domain.payment.PaymentService;
 import com.loopers.domain.point.PointCommand;
 import com.loopers.domain.point.Point;
 import com.loopers.domain.point.PointService;
@@ -21,6 +19,7 @@ import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.user.User;
 import com.loopers.domain.user.UserRepository;
+import com.loopers.interfaces.api.payment.CardType;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import com.loopers.utils.DatabaseCleanUp;
@@ -52,6 +51,9 @@ public class OrderFacadeTest {
 
     @Autowired
     private CouponService couponService;
+
+    @Autowired
+    private CardService cardService;
 
     @Autowired
     DatabaseCleanUp databaseCleanUp;
@@ -115,34 +117,39 @@ public class OrderFacadeTest {
             .build();
 
         couponService.save(coupon);
+
+        Card card = new Card("utlee", "KB", CardType.KB, "1234567890121234" );
+        cardService.saveCard(card);
     }
 
     @Nested
     @DisplayName("정상")
     class placeOrder {
 
-        List<OrderDetail> items = List.of(
-            new OrderDetail("A0001", 2L, BigDecimal.valueOf(1000)),
-            new OrderDetail("A0002", 1L, BigDecimal.valueOf(2000))
-        );
-
         String userId = "utlee";
-
 
         @DisplayName("주문 정상")
         @Test
         void order_when_valid_succeed(){
-
             //given
-            Order order = Order.createOrder("user1", items, null,null);
+            List<OrderCriteria.OrderDetailRequest> orderDetails = List.of(
+                new OrderCriteria.OrderDetailRequest("A0001", 2L, BigDecimal.valueOf(1000)),
+                new OrderCriteria.OrderDetailRequest("A0002", 1L, BigDecimal.valueOf(2000))
+            );
+
+            OrderCriteria.CreateOrder criteria = new OrderCriteria.CreateOrder(
+                userId, orderDetails, null, null, null
+            );
+
             //when
-            OrderResult orderResult = orderFacade.orderSubmit(userId, order);
+            OrderInfo orderInfo = orderFacade.placeOrder(criteria);
 
             //then
             assertAll(
-                () -> assertThat(orderResult.orderInfo().getOrder().getOrderNo()).isNotNull()
+                () -> assertThat(orderInfo.getOrder().getOrderNo()).isNotNull(),
+                () -> assertThat(orderInfo.getOrder().getUserId()).isEqualTo(userId),
+                () -> assertThat(orderInfo.getOrder().getOrderDetailList()).hasSize(2)
             );
-
         }
 
         @DisplayName("주문 정상 - 쿠폰 적용")
@@ -150,14 +157,78 @@ public class OrderFacadeTest {
         void order_when_valid_succeed_with_coupon(){
             //given
             String couponNo = "1234";
-            Order order = Order.createOrder("user1", items, couponNo,null);
+            List<OrderCriteria.OrderDetailRequest> orderDetails = List.of(
+                new OrderCriteria.OrderDetailRequest("A0001", 2L, BigDecimal.valueOf(1000)),
+                new OrderCriteria.OrderDetailRequest("A0002", 1L, BigDecimal.valueOf(2000))
+            );
+
+            OrderCriteria.CreateOrder criteria = new OrderCriteria.CreateOrder(
+                userId, orderDetails, couponNo, null, null
+            );
 
             //when
-            OrderResult orderResult = orderFacade.orderSubmit(userId, order);
+            OrderInfo orderInfo = orderFacade.placeOrder(criteria);
 
             //then
             assertAll(
-                () -> assertThat(orderResult.orderInfo().getOrder().getOrderNo()).isNotNull()
+                () -> assertThat(orderInfo.getOrder().getOrderNo()).isNotNull(),
+                () -> assertThat(orderInfo.getOrder().getUserId()).isEqualTo(userId),
+                () -> assertThat(orderInfo.getOrder().getCouponNo()).isEqualTo(couponNo),
+                () -> assertThat(orderInfo.getOrder().getDiscountAmount()).isGreaterThan(BigDecimal.ZERO)
+            );
+        }
+
+        @DisplayName("주문 및 결제 통합 처리 정상")
+        @Test
+        void orderWithPayment_when_valid_succeed(){
+            //given
+            List<OrderCriteria.OrderDetailRequest> orderDetails = List.of(
+                new OrderCriteria.OrderDetailRequest("A0001", 2L, BigDecimal.valueOf(1000)),
+                new OrderCriteria.OrderDetailRequest("A0002", 1L, BigDecimal.valueOf(2000))
+            );
+
+            OrderCriteria.CreateOrder criteria = new OrderCriteria.CreateOrder(
+                userId, orderDetails, null, null, null
+            );
+
+            //when
+            OrderResult result = orderFacade.placeOrderWithPayment(criteria);
+
+            //then
+            assertAll(
+                () -> assertThat(result.orderInfo().getOrder().getOrderNo()).isNotNull(),
+                () -> assertThat(result.orderInfo().getOrder().getUserId()).isEqualTo(userId),
+                () -> assertThat(result.orderInfo().getOrder().getOrderDetailList()).hasSize(2),
+                () -> assertThat(result.paymentSuccess()).isTrue(),
+                () -> assertThat(result.isSuccess()).isTrue()
+            );
+        }
+
+        @DisplayName("주문 및 결제 통합 처리 - 쿠폰 적용")
+        @Test
+        void orderWithPayment_when_valid_succeed_with_coupon(){
+            //given
+            String couponNo = "1234";
+            List<OrderCriteria.OrderDetailRequest> orderDetails = List.of(
+                new OrderCriteria.OrderDetailRequest("A0001", 2L, BigDecimal.valueOf(1000)),
+                new OrderCriteria.OrderDetailRequest("A0002", 1L, BigDecimal.valueOf(2000))
+            );
+
+            OrderCriteria.CreateOrder criteria = new OrderCriteria.CreateOrder(
+                userId, orderDetails, couponNo, null, null
+            );
+
+            //when
+            OrderResult result = orderFacade.placeOrderWithPayment(criteria);
+
+            //then
+            assertAll(
+                () -> assertThat(result.orderInfo().getOrder().getOrderNo()).isNotNull(),
+                () -> assertThat(result.orderInfo().getOrder().getUserId()).isEqualTo(userId),
+                () -> assertThat(result.orderInfo().getOrder().getCouponNo()).isEqualTo(couponNo),
+                () -> assertThat(result.orderInfo().getOrder().getDiscountAmount()).isGreaterThan(BigDecimal.ZERO),
+                () -> assertThat(result.paymentSuccess()).isTrue(),
+                () -> assertThat(result.isSuccess()).isTrue()
             );
         }
     }
@@ -171,19 +242,19 @@ public class OrderFacadeTest {
         @DisplayName("주문자 이상 - 404에러")
         @Test
         void order_failed_invalid_userId(){
-
             //given
-            List<OrderDetail> items = List.of(
-                new OrderDetail("A0001", 2L, BigDecimal.valueOf(1000)),
-                new OrderDetail("A0002", 1L, BigDecimal.valueOf(2000))
+            List<OrderCriteria.OrderDetailRequest> orderDetails = List.of(
+                new OrderCriteria.OrderDetailRequest("A0001", 2L, BigDecimal.valueOf(1000)),
+                new OrderCriteria.OrderDetailRequest("A0002", 1L, BigDecimal.valueOf(2000))
             );
 
-            Order order = Order.createOrder("anonymous", items, null,null);
+            OrderCriteria.CreateOrder criteria = new OrderCriteria.CreateOrder(
+                "anonymous", orderDetails, null, null,null
+            );
 
-            //when
+            //when & then
             CoreException result = Assert.assertThrows(CoreException.class, () -> {
-                OrderResult orderResult = orderFacade.orderSubmit("anonymous", order);
-
+                orderFacade.placeOrder(criteria);
             });
 
             //then
@@ -191,96 +262,98 @@ public class OrderFacadeTest {
             assertThat(result.getMessage()).isEqualTo("존재하는 회원이 없습니다");
         }
 
-        @DisplayName("가지고 있는 포인트보다 총 합계금액이 더 클때 - 400에러")
+        @DisplayName("주문 상세가 없는 경우 - 400에러")
         @Test
-        void order_failed_invalid_totalAmount(){
-
+        void order_failed_empty_order_details(){
             //given
-            List<OrderDetail> items = List.of(
-                new OrderDetail("A0001", 22L, BigDecimal.valueOf(1000)),
-                new OrderDetail("A0002", 13L, BigDecimal.valueOf(2000))
+            List<OrderCriteria.OrderDetailRequest> orderDetails = List.of();
+
+            OrderCriteria.CreateOrder criteria = new OrderCriteria.CreateOrder(
+                userId, orderDetails, null, null, null
             );
 
-            Order order = Order.createOrder(userId, items, null,null);
-
-            //when
+            //when & then
             CoreException result = Assert.assertThrows(CoreException.class, () -> {
-                OrderResult orderResult = orderFacade.orderSubmit(userId, order);
-
+                orderFacade.placeOrder(criteria);
             });
 
-            //then
             assertThat(result.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
-            assertThat(result.getMessage()).isEqualTo("가지고 있는 잔액이 부족합니다");
+            assertThat(result.getMessage()).isEqualTo("주문 상품이 비어있습니다");
         }
 
-        @DisplayName("미존재 물품으로 주문 - 404에러")
-        @Test
-        void order_failed_invalid_items(){
+    }
 
-            //given
-            List<OrderDetail> items = List.of(
-                new OrderDetail("A0004", 2L, BigDecimal.valueOf(1000)),
-                new OrderDetail("A0005", 1L, BigDecimal.valueOf(2000))
+    @Nested
+    @DisplayName("주문 조회")
+    class GetOrders {
+
+        String userId = "utlee";
+
+        @DisplayName("사용자별 주문 목록 조회")
+        @Test
+        void getOrdersByUserId_success() {
+            //given - 주문 생성
+            List<OrderCriteria.OrderDetailRequest> orderDetails = List.of(
+                new OrderCriteria.OrderDetailRequest("A0001", 1L, BigDecimal.valueOf(1000))
             );
 
+            OrderCriteria.CreateOrder createCriteria = new OrderCriteria.CreateOrder(
+                userId, orderDetails, null, null, null
+            );
+            orderFacade.placeOrder(createCriteria);
+
             //when
-            CoreException result = Assert.assertThrows(CoreException.class, () -> {
-                Order order = Order.createOrder(userId, items, null,null);
-                orderFacade.orderSubmit(userId, order);
-            });
+            OrderCriteria.GetOrdersByUserId criteria = new OrderCriteria.GetOrdersByUserId(userId);
+            List<OrderInfo> orders = orderFacade.getOrdersByUserId(criteria);
 
             //then
+            assertAll(
+                () -> assertThat(orders).isNotEmpty(),
+                () -> assertThat(orders).hasSize(1),
+                () -> assertThat(orders.get(0).getOrder().getUserId()).isEqualTo(userId)
+            );
+        }
+
+        @DisplayName("주문번호로 주문 상세 조회")
+        @Test
+        void getOrderByOrderNo_success() {
+            //given - 주문 생성
+            List<OrderCriteria.OrderDetailRequest> orderDetails = List.of(
+                new OrderCriteria.OrderDetailRequest("A0001", 1L, BigDecimal.valueOf(1000))
+            );
+
+            OrderCriteria.CreateOrder createCriteria = new OrderCriteria.CreateOrder(
+                userId, orderDetails, null, null, null
+            );
+            OrderInfo createdOrder = orderFacade.placeOrder(createCriteria);
+            String orderNo = createdOrder.getOrder().getOrderNo();
+
+            //when
+            OrderCriteria.GetOrderByOrderNo criteria = new OrderCriteria.GetOrderByOrderNo(userId, orderNo);
+            OrderInfo orderInfo = orderFacade.getOrderByOrderNo(criteria);
+
+            //then
+            assertAll(
+                () -> assertThat(orderInfo).isNotNull(),
+                () -> assertThat(orderInfo.getOrder().getOrderNo()).isEqualTo(orderNo),
+                () -> assertThat(orderInfo.getOrder().getUserId()).isEqualTo(userId)
+            );
+        }
+
+        @DisplayName("존재하지 않는 주문번호로 조회 - 404에러")
+        @Test
+        void getOrderByOrderNo_not_found() {
+            //given
+            String nonExistentOrderNo = "NON_EXISTENT_ORDER";
+
+            //when & then
+            OrderCriteria.GetOrderByOrderNo criteria = new OrderCriteria.GetOrderByOrderNo(userId, nonExistentOrderNo);
+            CoreException result = Assert.assertThrows(CoreException.class, () -> {
+                orderFacade.getOrderByOrderNo(criteria);
+            });
+
             assertThat(result.getErrorType()).isEqualTo(ErrorType.NOT_FOUND);
-            assertThat(result.getMessage()).isEqualTo("검색하려는 물품이 없습니다");
-        }
-
-        @DisplayName("재고 수량 이상으로 주문  - 400에러")
-        @Test
-        void order_failed_invalid_items_quantity(){
-
-            //given
-            List<OrderDetail> items = List.of(
-                new OrderDetail("A0001", 24L, BigDecimal.valueOf(10)),
-                new OrderDetail("A0002", 10L, BigDecimal.valueOf(20))
-            );
-
-            Order order = Order.createOrder(userId, items, null,null);
-
-            //when
-            CoreException result = Assert.assertThrows(CoreException.class, () -> {
-                OrderResult orderResult = orderFacade.orderSubmit(userId, order);
-
-            });
-
-            //then
-            assertThat(result.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
-            assertThat(result.getMessage()).isEqualTo("재고가 부족합니다");
-        }
-
-        @DisplayName("쿠폰 사용하면서 포인트 부족 - 400에러")
-        @Test
-        void order_failed_invalid_user_point(){
-
-            String couponNo = "1234";
-
-            //given
-            List<OrderDetail> items = List.of(
-                new OrderDetail("A0003", 24L, BigDecimal.valueOf(100000)),
-                new OrderDetail("A0004", 10L, BigDecimal.valueOf(200000))
-            );
-
-            Order order = Order.createOrder(userId, items, couponNo,null);
-
-            //when
-            CoreException result = Assert.assertThrows(CoreException.class, () -> {
-                OrderResult orderResult = orderFacade.orderSubmit(userId, order);
-
-            });
-
-            //then
-            assertThat(result.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
-            assertThat(result.getMessage()).isEqualTo("가지고 있는 잔액이 부족합니다");
+            assertThat(result.getMessage()).isEqualTo("주문을 찾을 수 없습니다");
         }
     }
 }

@@ -5,16 +5,15 @@ import java.util.List;
 public interface OrderDetailRepository {
 
     /**
-     * 주문 상세 저장
-     * @param orderDetail
+     * 주문 상세 목록 저장
+     * @param orderDetails
      */
-    void OrderDetailSave(List<OrderDetail> orderDetail);
+    void saveAll(List<OrderDetail> orderDetails);
 
     /**
      * 주문상세 조회
      * @param orderId
-     * @param userId
      * @return
      */
-    List<OrderDetail> findByOrderNoAndUserId(Long orderId, String userId);
+    List<OrderDetail> findByOrderId(String orderId);
 }

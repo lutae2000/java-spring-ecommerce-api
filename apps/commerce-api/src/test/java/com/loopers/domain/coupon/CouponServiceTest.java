@@ -88,7 +88,7 @@ public class CouponServiceTest {
         })
         void useCoupon_whenFailed(String userId, String couponNo){
 
-            CouponCommand couponCommand = new CouponCommand(userId, couponNo);
+            CouponCommand couponCommand = new CouponCommand(userId, couponNo, true);
             CoreException response = assertThrows(CoreException.class, () -> {
                 couponService.updateCouponUseYn(couponCommand);
             });
@@ -104,7 +104,7 @@ public class CouponServiceTest {
         })
         void useCoupon_whenSucceed(String userId, String couponNo){
 
-            CouponCommand couponCommand = new CouponCommand(userId, couponNo);
+            CouponCommand couponCommand = new CouponCommand(userId, couponNo,true);
             couponService.updateCouponUseYn(couponCommand);
         }
 
@@ -116,7 +116,7 @@ public class CouponServiceTest {
         })
         void useCoupon_alreadyUsedCoupon(String userId, String couponNo){
 
-            CouponCommand couponCommand = new CouponCommand(userId, couponNo);
+            CouponCommand couponCommand = new CouponCommand(userId, couponNo, true);
 
             CoreException response = assertThrows(CoreException.class, () -> {
                 couponService.updateCouponUseYn(couponCommand);
