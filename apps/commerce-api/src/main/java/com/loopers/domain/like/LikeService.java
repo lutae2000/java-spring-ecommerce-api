@@ -1,6 +1,7 @@
 package com.loopers.domain.like;
 
 import com.loopers.domain.like.event.LikeEvent;
+import com.loopers.domain.user.event.UserActionEvent;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -83,6 +84,9 @@ public class LikeService {
         
         while (retryCount < maxRetries) {
             try {
+                //사용자 행동 모니터링
+                eventPublisher.publishEvent(new UserActionEvent(userId, new Object(){}.getClass().getEnclosingMethod().getName(), productId));
+
                 // 1. 새로운 좋아요 생성
                 Like newLike = new Like(productId, userId);
                 likeRepository.save(newLike);
@@ -90,6 +94,7 @@ public class LikeService {
 
                 //이벤트 비동기화 방식으로 바꿈
                 log.debug("이벤트 발행 시작 - productId: {}, userId: {}, increment: {}", productId, userId, true);
+
                 eventPublisher.publishEvent(new LikeEvent(this, userId, productId, true));
                 log.debug("이벤트 발행 완료 - productId: {}, userId: {}", productId, userId);
                 
@@ -128,6 +133,9 @@ public class LikeService {
         
         while (retryCount < maxRetries) {
             try {
+                //사용자 행동 모니터링
+                eventPublisher.publishEvent(new UserActionEvent(userId, new Object(){}.getClass().getEnclosingMethod().getName(), productId));
+
                 // 1. 좋아요 삭제
                 likeRepository.deleteByProductIdAndUserId(userId, productId);
                 log.debug("Like deleted - userId: {}, productId: {}", userId, productId);
