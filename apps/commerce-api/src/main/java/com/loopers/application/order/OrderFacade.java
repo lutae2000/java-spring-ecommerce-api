@@ -10,6 +10,8 @@ import com.loopers.domain.order.Order;
 import com.loopers.domain.order.OrderDetail;
 import com.loopers.domain.order.OrderInfo;
 import com.loopers.domain.order.OrderService;
+import com.loopers.domain.order.event.CouponUsageEvent;
+import com.loopers.domain.order.event.OrderCreatedEvent;
 import com.loopers.domain.payment.PaymentInfo;
 import com.loopers.domain.payment.PaymentService;
 import com.loopers.domain.point.Point;
@@ -24,6 +26,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +47,7 @@ public class OrderFacade {
     private final PaymentService paymentService;
     private final CardService cardService;
 
+    private final ApplicationEventPublisher eventPublisher;
     /**
      * 주문 생성 (결제 처리 포함)
      */
@@ -76,9 +81,12 @@ public class OrderFacade {
             
             // 6. 주문 저장 (별도 트랜잭션)
             OrderInfo orderInfo = saveOrderInTransaction(criteria.userId(), order, discountPrice);
-            
+
+            if(StringUtils.isNotEmpty(criteria.couponNo())){
+                eventPublisher.publishEvent(new CouponUsageEvent(this, criteria.couponNo(), criteria.userId(), order));
+            }
             // 7. 결제 처리 (별도 처리 - 실패해도 주문 데이터는 보존)
-            processPaymentAndUpdateStock(criteria, orderInfo);
+            eventPublisher.publishEvent(new OrderCreatedEvent(this, order, criteria.userId()));
             
             log.info("주문 생성 완료 - orderNo: {}, userId: {}", orderInfo.getOrder().getOrderNo(), criteria.userId());
             return orderInfo;
@@ -91,6 +99,8 @@ public class OrderFacade {
             throw new CoreException(ErrorType.INTERNAL_ERROR, "주문 처리 중 오류가 발생했습니다");
         }
     }
+
+
 
     /**
      * 결제 처리 및 재고 차감 (주문 생성 후 별도 처리)
@@ -133,20 +143,7 @@ public class OrderFacade {
         }
     }
 
-    /**
-     * 주문 생성 및 결제 처리 (통합 메서드)
-     * @param criteria 주문 생성 요청 정보
-     * @return 주문 결과 (주문 정보 + 결제 성공 여부)
-     */
-    public OrderResult placeOrderWithPayment(OrderCriteria.CreateOrder criteria) {
-        // 주문 생성 (내부에서 결제 처리 및 재고 차감까지 완료)
-        OrderInfo orderInfo = placeOrder(criteria);
-        
-        // 주문 상태를 확인하여 결제 성공 여부 판단
-        boolean paymentSuccess = orderInfo.getOrder().getOrderStatus() == OrderStatus.ORDER_PAID;
-        
-        return new OrderResult(orderInfo, paymentSuccess);
-    }
+
 
     /**
      * 사용자 유효성 검증
