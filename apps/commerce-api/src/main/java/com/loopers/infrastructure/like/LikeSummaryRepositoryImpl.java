@@ -56,8 +56,10 @@ public class LikeSummaryRepositoryImpl implements LikeSummaryRepository {
      * @return
      */
     @Override
+    @Transactional(readOnly = true)
     public Long LikeSummaryCountByProductId(String productId){
-        return likeSummaryJpaRepository.LikeCountByProductId(productId);
+        Long count = likeSummaryJpaRepository.LikeCountByProductId(productId);
+        return count != null ? count : 0L;
     }
 
     /**
