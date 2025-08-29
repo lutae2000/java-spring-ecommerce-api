@@ -62,43 +62,6 @@ public class OrderController {
         return ApiResponse.success(OrderDto.Response.from(orderInfo));
     }
 
-    /**
-     * 주문 생성 및 결제 처리 (통합)
-     * @param userId 사용자 ID (헤더)
-     * @param request 주문 생성 요청
-     * @return 주문 결과 (주문 정보 + 결제 성공 여부)
-     */
-    @PostMapping("/with-payment")
-    public ApiResponse<OrderDto.OrderResultResponse> createOrderWithPayment(
-        @RequestHeader(value = CustomHeader.USER_ID, required = false) String userId,
-        @RequestBody OrderDto.CreateRequest request
-    ) {
-        log.info("Order creation with payment API called - userId: {}, productCount: {}", userId, request.orderDetails().size());
-
-        if (!StringUtils.hasText(userId)) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "X-USER-ID 헤더는 필수입니다");
-        }
-
-        // OrderDetailRequest 리스트 변환
-        List<OrderCriteria.OrderDetailRequest> orderDetails = request.orderDetails().stream()
-            .map(detail -> new OrderCriteria.OrderDetailRequest(
-                detail.productId(),
-                detail.quantity(),
-                detail.unitPrice()
-            ))
-            .toList();
-
-        OrderCriteria.CreateOrder criteria = new OrderCriteria.CreateOrder(
-            userId,
-            orderDetails,
-            request.couponNo(),
-            request.usePoint(),
-            request.discountAmount()
-        );
-
-        OrderResult result = orderFacade.placeOrderWithPayment(criteria);
-        return ApiResponse.success(OrderDto.OrderResultResponse.from(result));
-    }
 
     /**
      * 기존 주문에 대한 결제 처리

@@ -10,6 +10,8 @@ import com.loopers.domain.coupon.CouponService;
 import com.loopers.domain.domainEnum.DiscountType;
 import com.loopers.domain.domainEnum.Gender;
 import com.loopers.domain.order.OrderInfo;
+import com.loopers.domain.order.event.CouponUsageEvent;
+import com.loopers.domain.order.event.OrderCreatedEvent;
 import com.loopers.domain.payment.PaymentService;
 import com.loopers.domain.point.PointCommand;
 import com.loopers.domain.point.Point;
@@ -33,8 +35,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 
 @SpringBootTest
+@RecordApplicationEvents
 public class OrderFacadeTest {
 
     @Autowired
@@ -57,6 +62,9 @@ public class OrderFacadeTest {
 
     @Autowired
     DatabaseCleanUp databaseCleanUp;
+
+    @Autowired
+    private ApplicationEvents applicationEvents;
 
     @AfterEach
     void terminateEachTest() {
@@ -148,8 +156,17 @@ public class OrderFacadeTest {
             assertAll(
                 () -> assertThat(orderInfo.getOrder().getOrderNo()).isNotNull(),
                 () -> assertThat(orderInfo.getOrder().getUserId()).isEqualTo(userId),
-                () -> assertThat(orderInfo.getOrder().getOrderDetailList()).hasSize(2)
+                () -> assertThat(orderInfo.getOrder().getOrderDetailList()).hasSize(2),
+                ()-> assertThat(applicationEvents.stream(OrderCreatedEvent.class))            //이벤트 호출여부 확인
+
+                    .hasSize(1)
+                    .first()
+                    .satisfies(e -> {
+                        assertThat(e.getOrder().getOrderNo()).isNotNull();
+                    })
             );
+
+
         }
 
         @DisplayName("주문 정상 - 쿠폰 적용")
@@ -174,61 +191,21 @@ public class OrderFacadeTest {
                 () -> assertThat(orderInfo.getOrder().getOrderNo()).isNotNull(),
                 () -> assertThat(orderInfo.getOrder().getUserId()).isEqualTo(userId),
                 () -> assertThat(orderInfo.getOrder().getCouponNo()).isEqualTo(couponNo),
-                () -> assertThat(orderInfo.getOrder().getDiscountAmount()).isGreaterThan(BigDecimal.ZERO)
-            );
-        }
+                () -> assertThat(orderInfo.getOrder().getDiscountAmount()).isGreaterThan(BigDecimal.ZERO),
+                () -> assertThat(applicationEvents.stream(OrderCreatedEvent.class))            //주문 이벤트 호출여부 확인
 
-        @DisplayName("주문 및 결제 통합 처리 정상")
-        @Test
-        void orderWithPayment_when_valid_succeed(){
-            //given
-            List<OrderCriteria.OrderDetailRequest> orderDetails = List.of(
-                new OrderCriteria.OrderDetailRequest("A0001", 2L, BigDecimal.valueOf(1000)),
-                new OrderCriteria.OrderDetailRequest("A0002", 1L, BigDecimal.valueOf(2000))
-            );
-
-            OrderCriteria.CreateOrder criteria = new OrderCriteria.CreateOrder(
-                userId, orderDetails, null, null, null
-            );
-
-            //when
-            OrderResult result = orderFacade.placeOrderWithPayment(criteria);
-
-            //then
-            assertAll(
-                () -> assertThat(result.orderInfo().getOrder().getOrderNo()).isNotNull(),
-                () -> assertThat(result.orderInfo().getOrder().getUserId()).isEqualTo(userId),
-                () -> assertThat(result.orderInfo().getOrder().getOrderDetailList()).hasSize(2),
-                () -> assertThat(result.paymentSuccess()).isTrue(),
-                () -> assertThat(result.isSuccess()).isTrue()
-            );
-        }
-
-        @DisplayName("주문 및 결제 통합 처리 - 쿠폰 적용")
-        @Test
-        void orderWithPayment_when_valid_succeed_with_coupon(){
-            //given
-            String couponNo = "1234";
-            List<OrderCriteria.OrderDetailRequest> orderDetails = List.of(
-                new OrderCriteria.OrderDetailRequest("A0001", 2L, BigDecimal.valueOf(1000)),
-                new OrderCriteria.OrderDetailRequest("A0002", 1L, BigDecimal.valueOf(2000))
-            );
-
-            OrderCriteria.CreateOrder criteria = new OrderCriteria.CreateOrder(
-                userId, orderDetails, couponNo, null, null
-            );
-
-            //when
-            OrderResult result = orderFacade.placeOrderWithPayment(criteria);
-
-            //then
-            assertAll(
-                () -> assertThat(result.orderInfo().getOrder().getOrderNo()).isNotNull(),
-                () -> assertThat(result.orderInfo().getOrder().getUserId()).isEqualTo(userId),
-                () -> assertThat(result.orderInfo().getOrder().getCouponNo()).isEqualTo(couponNo),
-                () -> assertThat(result.orderInfo().getOrder().getDiscountAmount()).isGreaterThan(BigDecimal.ZERO),
-                () -> assertThat(result.paymentSuccess()).isTrue(),
-                () -> assertThat(result.isSuccess()).isTrue()
+                    .hasSize(1)
+                    .first()
+                    .satisfies(e -> {
+                        assertThat(e.getOrder().getOrderNo()).isNotNull();
+                    }),
+                () -> assertThat(applicationEvents.stream(CouponUsageEvent.class))            //쿠폰 이벤트 호출여부 확인
+                    .hasSize(1)
+                    .first()
+                    .satisfies(e -> {
+                        assertThat(e.getOrder().getOrderNo()).isNotNull();
+                        assertThat(e.getCouponNo()).isEqualTo(couponNo);
+                    })
             );
         }
     }
