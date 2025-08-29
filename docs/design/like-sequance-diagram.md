@@ -20,5 +20,6 @@ participant LikeSummaryRepository
     LikeFacade-->>Client: 응답
     
     Note over DB: 트랜잭션 커밋 
-    LikeEventHandler->>LikeSummaryRepository: incrementLikeCount(productId)
-    LikeSummaryRepository-->>LikeEventHandler: 집계 업데이트 완료
+    LikeEventHandler->>LikeSummaryRepository: 상품의 좋아요 횟수 조회
+    LikeSummaryRepository-->>LikeEventHandler: 좋아요 횟수응답 
+    LikeEventHandler->>LikeSummaryRepository: 좋아요/취소 횟수 업데이트 요청

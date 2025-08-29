@@ -16,6 +16,7 @@ import com.loopers.domain.payment.PaymentInfo;
 import com.loopers.domain.payment.PaymentService;
 import com.loopers.domain.point.Point;
 import com.loopers.domain.point.PointService;
+import com.loopers.domain.product.ProductInfo;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.user.UserInfo;
 import com.loopers.domain.user.UserService;
@@ -56,6 +57,7 @@ public class OrderFacade {
         log.info("주문 생성 시작 - userId: {}", criteria.userId());
         
         try {
+            BigDecimal discountPrice;
 
             // 0. 입력 값 사전 검증 및 기본값 보정
             validateOrderDetails(criteria.orderDetails());
@@ -71,7 +73,7 @@ public class OrderFacade {
             validateProducts(criteria.orderDetails());
             
             // 3. 쿠폰 처리 및 할인금액 계산
-            BigDecimal discountPrice = processCoupon(criteria);
+            discountPrice = StringUtils.isNotEmpty(criteria.couponNo()) ? processCoupon(criteria) : BigDecimal.ZERO;
             
             // 4. 주문 생성
             Order order = createOrder(criteria, discountPrice);
@@ -161,7 +163,10 @@ public class OrderFacade {
      */
     private void validateProducts(List<OrderCriteria.OrderDetailRequest> orderDetails) {
         orderDetails.forEach(detail -> {
-            productService.findProduct(detail.productId());
+            ProductInfo productInfo = productService.findProduct(detail.productId());
+            if(productInfo.getQuantity() < detail.quantity()){
+                throw new CoreException(ErrorType.BAD_REQUEST, "주문하려는 상품의 재고가 부족합니다");
+            }
         });
     }
 
