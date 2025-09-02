@@ -82,8 +82,6 @@ public class OrderEventHandler {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processPaymentAsync(OrderCreatedEvent event) {
         Order order = event.getOrder();
-        //사용자 행동 모니터링
-        eventPublisher.publishEvent(new UserActionEvent(event.getUserId(), new Object(){}.getClass().getEnclosingMethod().getName(), event.getOrder().getOrderNo()));
 
         // 결제 처리
         boolean paymentSuccess = processPayment(order);
