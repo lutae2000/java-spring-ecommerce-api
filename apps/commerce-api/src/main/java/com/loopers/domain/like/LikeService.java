@@ -1,11 +1,14 @@
 package com.loopers.domain.like;
 
+import com.loopers.domain.like.event.LikeEvent;
+import com.loopers.domain.user.event.UserActionEvent;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DeadlockLoserDataAccessException;
 import org.springframework.stereotype.Service;
@@ -17,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class LikeService {
     private final LikeRepository likeRepository;
     private final LikeSummaryRepository likeSummaryRepository;
+    private final ApplicationEventPublisher eventPublisher;
     
     /**
      * like 추가 (Pessimistic Locking)
@@ -80,16 +84,27 @@ public class LikeService {
         
         while (retryCount < maxRetries) {
             try {
+                //사용자 행동 모니터링
+                eventPublisher.publishEvent(new UserActionEvent(userId, new Object(){}.getClass().getEnclosingMethod().getName(), productId));
+
                 // 1. 새로운 좋아요 생성
                 Like newLike = new Like(productId, userId);
                 likeRepository.save(newLike);
                 log.debug("Like created - userId: {}, productId: {}", userId, productId);
 
-                // 2. LikeSummary 원자적 업데이트
-                updateLikeSummaryAtomically(productId, true);
+                //이벤트 비동기화 방식으로 바꿈
+                log.debug("이벤트 발행 시작 - productId: {}, userId: {}, increment: {}", productId, userId, true);
+
+                eventPublisher.publishEvent(new LikeEvent(this, userId, productId, true));
+                log.debug("이벤트 발행 완료 - productId: {}, userId: {}", productId, userId);
+                
                 return; // 성공하면 종료
                 
-            } catch (DeadlockLoserDataAccessException | DataIntegrityViolationException e) {
+            } catch (DataIntegrityViolationException e) {
+                // 중복 키 에러는 무시 (이미 좋아요가 존재함)
+                log.debug("Like already exists - userId: {}, productId: {}", userId, productId);
+                return;
+            } catch (DeadlockLoserDataAccessException e) {
                 retryCount++;
                 if (retryCount >= maxRetries) {
                     log.warn("Like creation failed after {} retries for userId: {}, productId: {}, error: {}", 
@@ -118,14 +133,20 @@ public class LikeService {
         
         while (retryCount < maxRetries) {
             try {
+                //사용자 행동 모니터링
+                eventPublisher.publishEvent(new UserActionEvent(userId, new Object(){}.getClass().getEnclosingMethod().getName(), productId));
+
                 // 1. 좋아요 삭제
                 likeRepository.deleteByProductIdAndUserId(userId, productId);
                 log.debug("Like deleted - userId: {}, productId: {}", userId, productId);
 
-                // 2. LikeSummary 원자적 업데이트
-                updateLikeSummaryAtomically(productId, false);
-                return; // 성공하면 종료
+                // 2. 이벤트 비동기 처리
+                log.debug("이벤트 발행 시작 - productId: {}, userId: {}, increment: {}", productId, userId, false);
+                eventPublisher.publishEvent(new LikeEvent(this, userId, productId, false));
+                log.debug("이벤트 발행 완료 - productId: {}, userId: {}", productId, userId);
                 
+                return; // 성공하면 종료
+
             } catch (DeadlockLoserDataAccessException | DataIntegrityViolationException e) {
                 retryCount++;
                 if (retryCount >= maxRetries) {

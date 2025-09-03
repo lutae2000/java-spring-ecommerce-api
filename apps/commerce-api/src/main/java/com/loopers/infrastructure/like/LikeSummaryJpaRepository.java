@@ -26,7 +26,7 @@ public interface LikeSummaryJpaRepository extends JpaRepository<LikeSummary, Lon
      * @param productId
      * @return
      */
-    @Query("select count(l) from LikeSummary l where l.productId = :productId")
+    @Query("select l.likesCount from LikeSummary l where l.productId = :productId")
     Long LikeCountByProductId(@Param("productId") String productId);
 
     /**
