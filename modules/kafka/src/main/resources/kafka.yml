@@ -3,7 +3,7 @@ spring:
     bootstrap-servers: ${BOOTSTRAP_SERVERS}
     client-id: ${spring.application.name}
     properties:
-      spring.json.add.type.headers: false
+      spring.json.add.type.headers: true
       request.timeout.ms: 20000
       retry.backoff.ms: 500
       auto:
@@ -15,12 +15,20 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       retries: 3
+      acks: all  # At Least Once 보장
+      enable-idempotence: true  # 멱등성 보장
+      properties:
+        spring.json.add.type.headers: true
     consumer:
       group-id: loopers-default-consumer
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-serializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer  # 일단 String으로 받아서 직접 파싱
       properties:
         enable-auto-commit: false
+        # JSON 설정 (타입 헤더 비활성화)
+        spring.json.add.type.headers: false
+        spring.json.use.type.headers: false
+        spring.json.trusted.packages: "*"
     listener:
       ack-mode: manual
 

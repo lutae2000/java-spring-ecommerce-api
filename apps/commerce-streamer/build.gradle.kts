@@ -14,9 +14,15 @@ dependencies {
     // web
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    
+    // kafka
+    implementation("org.springframework.kafka:spring-kafka")
+    
+    // JPA (직접 의존성 추가)
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
-    // querydsl
-    annotationProcessor("com.querydsl:querydsl-apt::jakarta")
+    // querydsl (임시 비활성화)
+    // annotationProcessor("com.querydsl:querydsl-apt::jakarta")
 
     // test-fixtures
     testImplementation(testFixtures(project(":modules:jpa")))
