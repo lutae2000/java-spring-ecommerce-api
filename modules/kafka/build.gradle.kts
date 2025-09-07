@@ -3,12 +3,6 @@ plugins {
     `java-test-fixtures`
 }
 
-sourceSets {
-    named("main") {
-        resources.srcDir("src/resources")
-    }
-}
-
 dependencies {
     // Spring for Apache Kafka
     implementation("org.springframework.kafka:spring-kafka")

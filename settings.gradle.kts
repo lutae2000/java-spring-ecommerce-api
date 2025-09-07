@@ -2,8 +2,11 @@ rootProject.name = "ecommerce-api"
 
 include(
     ":apps:commerce-api",
+    ":apps:commerce-streamer",
     ":apps:pg-simulator",
+    ":modules:feignClient",
     ":modules:jpa",
+    ":modules:kafka",
     ":modules:redis",
     ":supports:jackson",
     ":supports:logging",
