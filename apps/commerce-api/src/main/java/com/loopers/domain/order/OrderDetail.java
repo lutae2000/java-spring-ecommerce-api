@@ -1,5 +1,6 @@
 package com.loopers.domain.order;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.loopers.domain.BaseEntity;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
@@ -13,7 +14,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 @Entity
@@ -25,6 +25,7 @@ public class OrderDetail extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_no")
+    @JsonIgnore  // 순환 참조 방지
     private Order order;
 
     private String productId;

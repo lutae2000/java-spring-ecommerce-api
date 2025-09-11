@@ -32,6 +32,7 @@ spring:
     import:
       - jpa.yml
       - redis.yml
+      - kafka.yml
       - logging.yml
       - monitoring.yml
       - resilience4j.yml  # 명시적으로 import
@@ -59,6 +60,10 @@ spring:
   config:
     activate:
       on-profile: local, test
+  kafka:
+    properties:
+      auto:
+        create.topics.enable: true
 
 ---
 spring:

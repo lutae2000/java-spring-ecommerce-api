@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: commerce-streamer
+  profiles:
+    active: local
+  config:
+    import:
+      - jpa.yml
+      - redis.yml
+      - kafka.yml
+      - monitoring.yml
+  kafka:
+    consumer:
+      group-id: commerce-streamer-consumer
+
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.loopers: DEBUG
+    org.springframework.kafka: INFO
+    org.apache.kafka: WARN
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local, test
+
+server:
+  port: 8084
+
+management:
+  server:
+    port: 8085
