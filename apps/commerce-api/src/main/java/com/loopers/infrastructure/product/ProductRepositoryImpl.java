@@ -1,6 +1,5 @@
 package com.loopers.infrastructure.product;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.loopers.application.product.ProductPageResult;
 import com.loopers.config.redis.RedisCacheTemplate;
 import com.loopers.domain.domainEnum.OrderStatus;
@@ -10,7 +9,6 @@ import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.product.SortBy;
 import java.time.Duration;
 import java.util.List;
-import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -147,5 +145,16 @@ public class ProductRepositoryImpl implements ProductRepository {
         redisCacheTemplate.deleteByPattern("product:brand:*");
 
         log.info("Invalidated product cache for productId: {}", productId);
+    }
+
+    /**
+     * 상품ID 리스트로 조회
+     *
+     * @param productIdList
+     * @return
+     */
+    @Override
+    public List<Product> findProductByProductIdList(List<String> productIdList) {
+        return productJPARepository.findProductByProductIdList(productIdList);
     }
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loopers.application.product.ProductPageResult;
 import com.loopers.domain.domainEnum.OrderStatus;
 import com.loopers.domain.product.event.StockOutKafkaEvent;
+import com.loopers.domain.rank.event.RankingEventPublisher;
 import com.loopers.infrastructure.event.KafkaEventPublisher;
 import com.loopers.infrastructure.kafka.PartitionKeyStrategy;
 import com.loopers.message.KafkaEventMessage;
@@ -29,6 +30,7 @@ public class ProductService {
     private final KafkaEventPublisher kafkaEventPublisher;
     private final PartitionKeyStrategy partitionKeyStrategy;
     private final ObjectMapper objectMapper;
+    private RankingEventPublisher rankingEventPublisher;
 
     /**
      * product 생성(upsert)
@@ -47,6 +49,9 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public ProductInfo findProduct(String productId){
+        // 상품 조회 이벤트 발행
+        rankingEventPublisher.publishViewEvent(productId);
+
         Product product = productRepository.findProductWithCache(productId, Duration.ofMinutes(1));
 
         if(ObjectUtils.isEmpty(product)){

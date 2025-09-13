@@ -26,3 +26,5 @@ public class LikeChangedEvent {
         this.occurredAt = LocalDateTime.now();
     }
 }
+
+

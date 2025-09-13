@@ -43,3 +43,5 @@ public class OrderCreatedKafkaEvent {
         private Long unitPrice;
     }
 }
+
+
