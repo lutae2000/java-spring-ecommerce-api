@@ -111,7 +111,7 @@ public class RankingService {
         // 점수도 함께 조회
         Double score = redisTemplate.opsForZSet().score(key, productId);
 
-        return new ProductRankInfo(rank, ObjectUtils.isNotEmpty(score) ? score : 0L);
+        return new ProductRankInfo(rank +1, ObjectUtils.isNotEmpty(score) ? score : 0L);
     }
 
     /**
