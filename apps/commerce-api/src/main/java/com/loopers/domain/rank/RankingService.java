@@ -87,9 +87,17 @@ public class RankingService {
     }
 
     /**
+     * 오늘 날짜 기준 특정 상품의 랭킹 조회
+     */
+    public ProductRankInfo getTodayProductRank(String productId) {
+        String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        return getProductRank(productId, today);
+    }
+
+    /**
      * 특정 상품의 랭킹 조회
      */
-/*    public RankInfo getProductRank(String productId, String date) {
+    public ProductRankInfo getProductRank(String productId, String date) {
         String key = "ranking:all:" + date;
 
         // Redis ZSET에서 해당 상품의 순위 조회
@@ -103,10 +111,8 @@ public class RankingService {
         // 점수도 함께 조회
         Double score = redisTemplate.opsForZSet().score(key, productId);
 
-        log.info("상품 랭킹 조회 - productId: {}, rank: {}, score: {}", productId, rank + 1, score);
-
-        return new RankInfo(productId, score.longValue(), rank + 1); // 0-based를 1-based로 변환
-    }*/
+        return new ProductRankInfo(rank, ObjectUtils.isNotEmpty(score) ? score : 0L);
+    }
 
     /**
      * 랭킹 키 생성

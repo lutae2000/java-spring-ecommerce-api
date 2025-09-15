@@ -18,9 +18,11 @@ public record ProductResult (
     String category2,
     String category3,
     BrandInfo brandInfo,
-    Long likes
+    Long likes,
+    Long rank,
+    Double score
 ){
-    public static ProductResult of(ProductInfo productInfo, BrandInfo brandInfo, Long likes){
+    public static ProductResult of(ProductInfo productInfo, BrandInfo brandInfo, Long likes, Long rank, Double score){
         return new ProductResult(
             productInfo.getCode(),
             productInfo.getName(),
@@ -33,11 +35,17 @@ public record ProductResult (
             productInfo.getCategory2(),
             productInfo.getCategory3(),
             brandInfo,
-            likes
+            likes,
+            rank,
+            score
         );
     }
 
+    public static ProductResult of(ProductInfo productInfo, BrandInfo brandInfo, Long likes){
+        return of(productInfo, brandInfo, likes, null, null);
+    }
+
     public static ProductResult of(ProductInfo productInfo){
-        return of(productInfo, null, productInfo.getLikeCount());
+        return of(productInfo, null, productInfo.getLikeCount(), null, null);
     }
 }

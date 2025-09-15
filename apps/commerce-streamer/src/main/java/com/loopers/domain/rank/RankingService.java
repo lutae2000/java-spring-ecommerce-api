@@ -36,5 +36,4 @@ public class RankingService {
             throw new RuntimeException("랭킹 이벤트 처리 실패", e);
         }
     }
-
 }
