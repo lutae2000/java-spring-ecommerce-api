@@ -30,7 +30,7 @@ public class ProductService {
     private final KafkaEventPublisher kafkaEventPublisher;
     private final PartitionKeyStrategy partitionKeyStrategy;
     private final ObjectMapper objectMapper;
-    private RankingEventPublisher rankingEventPublisher;
+    private final RankingEventPublisher rankingEventPublisher;
 
     /**
      * product 생성(upsert)
@@ -129,6 +129,7 @@ public class ProductService {
             .version(1)
             .payload(objectMapper.writeValueAsString(kafkaEvent))
             .build();
+
 
         // 파티션 키 생성 (상품별 순서 보장)
         String partitionKey = partitionKeyStrategy.getCatalogEventPartitionKey(productId);

@@ -1,6 +1,7 @@
 package com.loopers.domain.rank.event;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loopers.infrastructure.event.KafkaEventPublisher;
 import com.loopers.infrastructure.kafka.PartitionKeyStrategy;
 import com.loopers.message.KafkaEventMessage;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 public class RankingEventPublisher {
     private final KafkaEventPublisher kafkaEventPublisher;
     private final PartitionKeyStrategy partitionKeyStrategy;
+    private final ObjectMapper objectMapper;
 
     /**
      * 상품 조회 이벤트 발행
@@ -48,13 +50,13 @@ public class RankingEventPublisher {
     private void publishRankingEvent(RankingEvent event) {
         try {
             String key = partitionKeyStrategy.generateKey(event.getProductId());
-            KafkaEventMessage<RankingEvent> message = KafkaEventMessage.<RankingEvent>builder()
+
+            KafkaEventMessage<Object> message = KafkaEventMessage.builder()
                 .eventId(UUID.randomUUID().toString())
-                .eventType(event.getEventType())
+                .eventType("RANKING")
                 .aggregateId(event.getProductId())
-                .timestamp(LocalDateTime.now())
                 .version(1)
-                .payload(event)
+                .payload(objectMapper.writeValueAsString(event))
                 .build();
 
             kafkaEventPublisher.publishEvent(
