@@ -3,6 +3,7 @@ package com.loopers.infrastructure.product;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.SortBy;
 import jakarta.persistence.LockModeType;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -65,4 +66,12 @@ public interface ProductJPARepository extends JpaRepository<Product, Long> {
      */
     @Query("update Product p set p.quantity = :quantity where p.code = :productId")
     void updateProductQuantity(String productId, Long quantity);
+
+    /**
+     * 상푸Id 리스트로 조회
+     * @param productIds
+     * @return
+     */
+    @Query("SELECT p FROM Product p WHERE p.code IN :productIds")
+    List<Product> findProductByProductIdList(List<String> productIds);
 }

@@ -56,4 +56,19 @@ public class PartitionKeyStrategy {
     public String getTimeBasedPartitionKey(String entityId, String datePrefix) {
         return datePrefix + ":" + entityId;
     }
+
+    /**
+     * 범용 파티션 키 생성 메서드
+     * - 기본적으로 상품 ID를 기준으로 파티셔닝
+     * - 랭킹 이벤트 등에서 사용
+     */
+    public String generateKey(String productId) {
+        if (productId == null || productId.trim().isEmpty()) {
+            log.warn("ProductId가 null이거나 비어있음 - 기본 키 사용");
+            return "default";
+        }
+        return "product:" + productId;
+    }
 }
+
+

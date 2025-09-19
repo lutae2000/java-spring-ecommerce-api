@@ -5,7 +5,6 @@ import com.loopers.application.product.ProductPageResult;
 import com.loopers.domain.domainEnum.OrderStatus;
 import java.time.Duration;
 import java.util.List;
-import java.util.function.Supplier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -67,4 +66,12 @@ public interface ProductRepository {
      * 캐시 무효화
      */
     void invalidateProductCache(String productId);
+
+    /**
+     * 상푸Id 리스트로 조회
+     *
+     * @param productIdList
+     * @return
+     */
+    List<Product> findProductByProductIdList(List<String> productIdList);
 }

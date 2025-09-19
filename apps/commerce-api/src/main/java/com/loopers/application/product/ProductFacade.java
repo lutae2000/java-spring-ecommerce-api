@@ -9,14 +9,20 @@ import com.loopers.domain.product.ProductInfo;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.product.SortBy;
+import com.loopers.domain.rank.ProductRankInfo;
+import com.loopers.domain.rank.RankInfo;
+import com.loopers.domain.rank.RankingService;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -27,6 +33,7 @@ public class ProductFacade {
     private final LikeService likeService;
     private final BrandService brandService;
     private final ProductRepository productRepository;
+    private final RankingService rankingService;
 
     /**
      * 물품 단건 조회
@@ -37,7 +44,23 @@ public class ProductFacade {
         ProductInfo productInfo = productService.findProduct(productId);
         BrandInfo brandInfo = brandService.findByBrandCode(productInfo.getBrandCode());
         LikeSummary likeSummary = likeService.likeSummaryByProductId(productId);
-        return ProductResult.of(productInfo, brandInfo, likeSummary.getLikesCount());
+
+        // 랭킹 정보 조회 (오늘 날짜 기준)
+        Long rank = null;
+        Double score = null;
+
+        try {
+            ProductRankInfo rankingInfo = rankingService.getTodayProductRank(productId);
+            if (rankingInfo != null) {
+                rank = rankingInfo.rank();
+                score = rankingInfo.score();
+            }
+        } catch (Exception e) {
+            log.warn("랭킹 정보 조회 실패 - productId: {}", productId, e);
+            // 랭킹 정보 조회 실패해도 상품 조회는 정상적으로 진행
+        }
+
+        return ProductResult.of(productInfo, brandInfo, likeSummary.getLikesCount(), rank, score);
     }
 
     /**
