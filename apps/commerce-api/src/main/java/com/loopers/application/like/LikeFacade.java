@@ -1,15 +1,11 @@
 package com.loopers.application.like;
 
-import com.loopers.domain.like.Like;
+
 import com.loopers.domain.like.LikeService;
-import com.loopers.domain.like.LikeSummary;
-import com.loopers.domain.like.LikeSummaryRepository;
 import com.loopers.domain.product.ProductInfo;
 import com.loopers.domain.product.ProductService;
 import com.loopers.domain.user.UserInfo;
 import com.loopers.domain.user.UserService;
-import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +16,6 @@ public class LikeFacade {
     private final LikeService likeService;
     private final UserService  userService;
     private final ProductService productService;
-    private final LikeSummaryRepository likeSummaryRepository;
     /**
      * 좋아요
      * @param userId

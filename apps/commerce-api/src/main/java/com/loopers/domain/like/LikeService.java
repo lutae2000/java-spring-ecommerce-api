@@ -1,6 +1,7 @@
 package com.loopers.domain.like;
 
 import com.loopers.domain.like.event.LikeEvent;
+import com.loopers.domain.rank.event.RankingEventPublisher;
 import com.loopers.domain.user.event.UserActionEvent;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,7 @@ public class LikeService {
     private final LikeRepository likeRepository;
     private final LikeSummaryRepository likeSummaryRepository;
     private final ApplicationEventPublisher eventPublisher;
-    
+    private final RankingEventPublisher rankingEventPublisher;
     /**
      * like 추가 (Pessimistic Locking)
      */
@@ -86,6 +87,8 @@ public class LikeService {
             try {
                 //사용자 행동 모니터링
                 eventPublisher.publishEvent(new UserActionEvent(userId, new Object(){}.getClass().getEnclosingMethod().getName(), productId));
+                // 좋아요 이벤트 발행
+                rankingEventPublisher.publishLikeEvent(productId, userId);
 
                 // 1. 새로운 좋아요 생성
                 Like newLike = new Like(productId, userId);
