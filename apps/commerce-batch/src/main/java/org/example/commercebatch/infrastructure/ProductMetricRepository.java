@@ -15,16 +15,11 @@ public interface ProductMetricRepository extends JpaRepository<ProductMetricsEnt
     @Query("""
         SELECT pm.productId, p.name, p.brand, p.category1,
                SUM(pm.likesCount), SUM(pm.salesCount), 
-               SUM(pm.pageViews)
+               SUM(pm.salesAmount), SUM(pm.pageViews)
         FROM ProductMetricsEntity pm
         INNER JOIN Product p ON pm.productId = p.code
         WHERE pm.metricsDate BETWEEN :startDate AND :endDate
         GROUP BY pm.productId, p.name, p.brand, p.category1
-        ORDER BY (
-            SUM(pm.salesAmount) * 0.6 + 
-            SUM(pm.likesCount) * 0.2 + 
-            SUM(pm.pageViews) * 0.1
-        ) DESC
         """)
     List<Object[]> findAggregatedByDateRange(@Param("startDate") LocalDate startDate,
                                            @Param("endDate") LocalDate endDate);

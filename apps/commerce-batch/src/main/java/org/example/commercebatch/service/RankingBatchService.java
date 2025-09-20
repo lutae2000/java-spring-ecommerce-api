@@ -59,9 +59,10 @@ public class RankingBatchService {
                 String category1 = (String) data[3];
                 Long likesCount = ((Number) data[4]).longValue();
                 Long salesCount = ((Number) data[5]).longValue();
+                Long salesAmount = ((Number) data[6]).longValue();
                 Long pageViews = ((Number) data[7]).longValue();
 
-                // 가중치 수정: order(salesAmount) 0.6, like 0.2, 조회(pageViews) 0.1
+                // 가중치 수정: order(salesCount) 0.6, like 0.2, 조회(pageViews) 0.1
                 Double totalScore = salesCount * 0.6 + likesCount * 0.2 + pageViews * 0.1;
 
                 ProductRank productRank = ProductRank.builder()
@@ -130,8 +131,8 @@ public class RankingBatchService {
                 Long salesAmount = ((Number) data[6]).longValue();
                 Long pageViews = ((Number) data[7]).longValue();
 
-                // 가중치 수정: order(salesAmount) 0.6, like 0.2, 조회(pageViews) 0.1, salesCount 0.1
-                Double totalScore = salesAmount * 0.6 + likesCount * 0.2 + pageViews * 0.1 + salesCount * 0.1;
+                // 가중치 수정: order(salesCount) 0.6, like 0.2, 조회(pageViews) 0.1
+                Double totalScore = salesCount * 0.6 + likesCount * 0.2 + pageViews * 0.1;
 
                 ProductRankMonthly productRank = ProductRankMonthly.builder()
                         .productId(productId)
@@ -162,3 +163,4 @@ public class RankingBatchService {
         }
     }
 }
+
