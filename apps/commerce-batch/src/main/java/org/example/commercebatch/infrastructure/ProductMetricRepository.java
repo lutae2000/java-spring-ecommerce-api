@@ -13,13 +13,12 @@ import java.util.List;
 public interface ProductMetricRepository extends JpaRepository<ProductMetricsEntity, Long> {
     
     @Query("""
-        SELECT pm.productId, p.name, p.brand, p.category1,
-               SUM(pm.likesCount), SUM(pm.salesCount), 
-               SUM(pm.salesAmount), SUM(pm.pageViews)
-        FROM ProductMetricsEntity pm
-        INNER JOIN Product p ON pm.productId = p.code
-        WHERE pm.metricsDate BETWEEN :startDate AND :endDate
-        GROUP BY pm.productId, p.name, p.brand, p.category1
+        SELECT pm.productId, SUM(PM.likesCount) likesCount
+        , SUM(pm.salesCount) SALES_COUNT, SUM(pm.pageViews) PAGE_VIEWS
+        , SUM(pm.salesAmount) salesAmount
+        FROM ProductMetricsEntity PM
+        WHERE PM.metricsDate BETWEEN :STARTDATE AND :ENDDATE
+        GROUP BY pm.productId, PM.likesCount, pm.salesCount, pm.pageViews
         """)
     List<Object[]> findAggregatedByDateRange(@Param("startDate") LocalDate startDate,
                                            @Param("endDate") LocalDate endDate);
